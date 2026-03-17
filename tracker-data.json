@@ -1,0 +1,35 @@
+{
+  "11": {
+    "mains": {
+      "minor": [
+        {
+          "label": "1",
+          "total": 222,
+          "phy": 12,
+          "chem": 12,
+          "maths": 12,
+          "date": "17/3/2026"
+        }
+      ],
+      "major": [],
+      "review": []
+    },
+    "adv": {
+      "minor": [],
+      "major": [],
+      "review": []
+    }
+  },
+  "12": {
+    "mains": {
+      "minor": [],
+      "major": [],
+      "review": []
+    },
+    "adv": {
+      "minor": [],
+      "major": [],
+      "review": []
+    }
+  }
+}
