@@ -137,7 +137,16 @@
       ]
     },
     "adv": {
-      "minor": [],
+      "minor": [
+        {
+          "label": "1",
+          "total": 38,
+          "phy": 13,
+          "chem": 5,
+          "maths": 20,
+          "date": "17/3/2026"
+        }
+      ],
       "major": [],
       "review": [
         {
