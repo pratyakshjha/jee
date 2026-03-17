@@ -147,7 +147,16 @@
           "date": "17/3/2026"
         }
       ],
-      "major": [],
+      "major": [
+        {
+          "label": "1",
+          "total": 82,
+          "phy": 23,
+          "chem": 38,
+          "maths": 21,
+          "date": "17/3/2026"
+        }
+      ],
       "review": [
         {
           "label": "1",
