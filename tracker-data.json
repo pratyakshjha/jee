@@ -66,7 +66,16 @@
     "adv": {
       "minor": [],
       "major": [],
-      "review": []
+      "review": [
+        {
+          "label": "1",
+          "total": 48,
+          "phy": 14,
+          "chem": 26,
+          "maths": 8,
+          "date": "17/3/2026"
+        }
+      ]
     }
   },
   "12": {
