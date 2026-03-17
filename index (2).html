@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JEE Progress Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#090b10;--bg2:#0e1117;--bg3:#141720;--bg4:#1a1e2a;
+      --border:rgba(255,255,255,0.07);
+      --accent1:#00e5ff;--accent2:#7c3aed;--accent3:#f97316;
+      --text:#e8eaf0;--muted:#5a6070;--success:#22d3a5;
+      --phy:#818cf8;--chem:#fb7185;--maths:#fbbf24;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.04) 2px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:9999;}
+    body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+    .wrapper{position:relative;z-index:1;max-width:1260px;margin:0 auto;padding:40px 24px 80px;}
+
+    /* ── TOKEN SCREEN ── */
+    #token-screen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;align-items:center;justify-content:center;}
+    .token-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:500px;width:90%;text-align:center;}
+    .token-box h2{font-size:22px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#fff 30%,var(--accent1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .token-box p{color:var(--muted);font-size:13px;line-height:1.7;margin-bottom:24px;}
+    .token-box a{color:var(--accent1);text-decoration:none;}
+    .token-box a:hover{text-decoration:underline;}
+    .token-input-wrap{display:flex;gap:8px;margin-bottom:12px;}
+    .token-input-wrap input{flex:1;background:var(--bg4);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:13px;padding:10px 14px;outline:none;transition:border-color .2s;}
+    .token-input-wrap input:focus{border-color:rgba(0,229,255,.4);}
+    .token-btn{background:linear-gradient(135deg,rgba(0,229,255,.2),rgba(124,58,237,.2));border:1px solid rgba(0,229,255,.3);color:var(--accent1);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:10px 20px;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .token-btn:hover{box-shadow:0 0 14px rgba(0,229,255,.2);}
+    .token-err{color:#f87171;font-family:'Space Mono',monospace;font-size:11px;min-height:16px;margin-top:4px;}
+    .token-steps{text-align:left;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);}
+    .token-steps p{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;line-height:2;}
+    .token-steps b{color:var(--text);}
+
+    /* ── SYNC STATUS BAR ── */
+    #sync-bar{position:fixed;top:0;left:0;right:0;z-index:500;height:3px;background:transparent;transition:background .3s;}
+    #sync-bar.saving{background:linear-gradient(90deg,var(--accent1),var(--accent2));animation:pulse-bar 1s ease infinite;}
+    #sync-bar.saved{background:var(--success);}
+    #sync-bar.error{background:#f87171;}
+    @keyframes pulse-bar{0%,100%{opacity:1}50%{opacity:.4}}
+
+    .sync-toast{position:fixed;bottom:24px;right:24px;z-index:600;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 16px;font-family:'Space Mono',monospace;font-size:11px;display:flex;align-items:center;gap:8px;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;}
+    .sync-toast.show{opacity:1;transform:translateY(0);}
+    .sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+    /* ── HEADER ── */
+    header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;flex-wrap:wrap;gap:16px;}
+    .logo-tag{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent1);letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;}
+    h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1;letter-spacing:-1px;background:linear-gradient(135deg,#fff 30%,var(--accent1));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+    .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:10px;}
+    .header-stats{display:flex;gap:24px;}
+    .hstat{text-align:right;}
+    .hstat-val{font-size:24px;font-weight:700;color:var(--accent1);font-family:'Space Mono',monospace;}
+    .hstat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;}
+    .logout-btn{background:none;border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .2s;letter-spacing:1px;}
+    .logout-btn:hover{color:#f87171;border-color:rgba(248,113,113,.3);}
+
+    /* ── SUMMARY ── */
+    .summary-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px;margin-bottom:36px;}
+    .sstat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
+    .sstat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent1);transform:scaleX(0);transform-origin:left;transition:transform .5s ease;}
+    .sstat.lit::after{transform:scaleX(1);}
+    .sstat-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;}
+    .sstat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:3px;}
+
+    /* ── TABS ── */
+    .tab-nav{display:flex;gap:4px;margin-bottom:28px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:4px;width:fit-content;}
+    .tab-btn{background:none;border:none;color:var(--muted);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;padding:10px 28px;border-radius:9px;cursor:pointer;transition:all .2s;letter-spacing:.5px;}
+    .tab-btn:hover{color:var(--text);}
+    .tab-btn.active{background:var(--bg3);color:var(--accent1);box-shadow:0 0 0 1px rgba(0,229,255,.2);}
+    .inner-tabs{display:flex;gap:6px;margin-bottom:20px;}
+    .inner-tab{background:var(--bg2);border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;padding:7px 20px;border-radius:6px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+    .inner-tab:hover{color:var(--text);}
+    .inner-tab.active{background:rgba(0,229,255,.1);color:var(--accent1);border-color:rgba(0,229,255,.3);}
+    .test-tabs{display:flex;gap:8px;margin-bottom:24px;}
+    .test-tab{background:var(--bg2);border:1px solid var(--border);color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;padding:7px 18px;border-radius:6px;cursor:pointer;transition:all .2s;text-transform:uppercase;}
+    .test-tab:hover{color:var(--text);border-color:rgba(255,255,255,.15);}
+    .test-tab.active{background:rgba(124,58,237,.15);color:#a78bfa;border-color:rgba(124,58,237,.4);}
+    .test-tab.mains.active{background:rgba(0,229,255,.1);color:var(--accent1);border-color:rgba(0,229,255,.35);}
+
+    /* ── PANES ── */
+    .section{display:none;}
+    .section.active{display:block;animation:fadeIn .3s ease;}
+    .inner-pane{display:none;}
+    .inner-pane.active{display:block;animation:fadeIn .25s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── CHART ── */
+    .chart-section{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:20px;}
+    .chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+    .chart-title{font-size:15px;font-weight:700;}
+    .chart-sub{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:3px;}
+    .legend{display:flex;gap:14px;flex-wrap:wrap;}
+    .legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;}
+    .legend-dot{width:8px;height:8px;border-radius:50%;}
+    canvas{max-height:280px;}
+
+    /* ── CARDS ── */
+    .cards-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;}
+    .card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px;transition:border-color .2s;}
+    .card:hover{border-color:rgba(0,229,255,.12);}
+    .card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+    .card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);}
+    .card-badge{font-family:'Space Mono',monospace;font-size:10px;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:1px;}
+    .badge-minor{background:rgba(249,115,22,.15);color:var(--accent3);}
+    .badge-major{background:rgba(0,229,255,.12);color:var(--accent1);}
+    .badge-review{background:rgba(34,211,165,.12);color:var(--success);}
+
+    /* ── ENTRY LIST ── */
+    .entry-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+    .entry-item{background:var(--bg3);border-radius:8px;padding:10px 12px;font-size:12px;animation:slideIn .2s ease;}
+    @keyframes slideIn{from{opacity:0;transform:translateX(-5px)}to{opacity:1;transform:translateX(0)}}
+    .entry-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+    .entry-label{color:var(--muted);font-family:'Space Mono',monospace;font-size:11px;}
+    .entry-total{font-family:'Space Mono',monospace;font-weight:700;font-size:13px;}
+    .entry-subjects{display:flex;gap:8px;flex-wrap:wrap;}
+    .esub{font-family:'Space Mono',monospace;font-size:10px;padding:2px 7px;border-radius:4px;}
+    .esub-phy{background:rgba(129,140,248,.15);color:var(--phy);}
+    .esub-chem{background:rgba(251,113,133,.15);color:var(--chem);}
+    .esub-maths{background:rgba(251,191,36,.15);color:var(--maths);}
+    .del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:0 3px;transition:color .15s;line-height:1;}
+    .del-btn:hover{color:#f87171;}
+
+    /* ── ADD FORM ── */
+    .add-form{display:flex;flex-direction:column;gap:8px;margin-top:6px;}
+    .add-form-row{display:flex;gap:7px;align-items:flex-end;flex-wrap:wrap;}
+    .form-group{display:flex;flex-direction:column;gap:3px;}
+    .form-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+    .add-form input{background:var(--bg4);border:1px solid var(--border);border-radius:7px;color:var(--text);font-family:'Space Mono',monospace;font-size:12px;padding:7px 10px;width:72px;outline:none;transition:border-color .2s;}
+    .add-form input.wide{width:100px;}
+    .add-form input:focus{border-color:rgba(0,229,255,.4);}
+    .add-form input::placeholder{color:var(--muted);}
+    .add-btn{background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(124,58,237,.15));border:1px solid rgba(0,229,255,.25);color:var(--accent1);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;padding:8px 14px;border-radius:7px;cursor:pointer;transition:all .2s;}
+    .add-btn:hover{background:linear-gradient(135deg,rgba(0,229,255,.25),rgba(124,58,237,.25));box-shadow:0 0 10px rgba(0,229,255,.15);}
+
+    /* ── SUBJECT CARDS ── */
+    .subj-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;}
+    .subj-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px;}
+    .subj-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+    .subj-name{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:2px;}
+    .subj-avg{font-family:'Space Mono',monospace;font-size:11px;padding:3px 10px;border-radius:5px;}
+    .subj-phy .subj-name{color:var(--phy);}
+    .subj-phy .subj-avg{background:rgba(129,140,248,.12);color:var(--phy);}
+    .subj-chem .subj-name{color:var(--chem);}
+    .subj-chem .subj-avg{background:rgba(251,113,133,.12);color:var(--chem);}
+    .subj-maths .subj-name{color:var(--maths);}
+    .subj-maths .subj-avg{background:rgba(251,191,36,.12);color:var(--maths);}
+
+    .sc-good{color:var(--success);}
+    .sc-mid{color:var(--accent1);}
+    .sc-low{color:var(--accent3);}
+    .empty-state{text-align:center;padding:30px 20px;color:var(--muted);font-size:12px;font-family:'Space Mono',monospace;}
+    .empty-icon{font-size:28px;margin-bottom:6px;}
+
+    /* ── LOADING OVERLAY ── */
+    #loading-overlay{position:fixed;inset:0;z-index:800;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+    #loading-overlay.hidden{display:none;}
+    .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent1);border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-text{font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:2px;}
+
+    @media(max-width:600px){
+      .cards-row,.subj-cards{grid-template-columns:1fr;}
+      .tab-btn{padding:8px 14px;font-size:12px;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- SYNC BAR -->
+<div id="sync-bar"></div>
+
+<!-- TOAST -->
+<div class="sync-toast" id="sync-toast">
+  <div class="sync-dot" id="sync-dot"></div>
+  <span id="sync-msg"></span>
+</div>
+
+<!-- LOADING -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading data...</div>
+</div>
+
+<!-- TOKEN SCREEN -->
+<div id="token-screen" style="display:none;">
+  <div class="token-box">
+    <h2>GitHub Token Required</h2>
+    <p>Your data is stored in your GitHub repo. Paste a Personal Access Token below to get started. It's saved locally in your browser — you only need to do this once.</p>
+    <div class="token-input-wrap">
+      <input type="password" id="token-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+      <button class="token-btn" onclick="submitToken()">Connect</button>
+    </div>
+    <div class="token-err" id="token-err"></div>
+    <div class="token-steps">
+      <p><b>How to get a token:</b></p>
+      <p>1. Go to <a href="https://github.com/settings/tokens/new" target="_blank">github.com/settings/tokens/new</a></p>
+      <p>2. Give it a name like <b>jee-tracker</b></p>
+      <p>3. Set expiration to <b>No expiration</b></p>
+      <p>4. Under <b>Scopes</b>, tick <b>repo</b></p>
+      <p>5. Click <b>Generate token</b> and paste it above</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="wrapper" id="app" style="display:none;">
+  <header>
+    <div class="logo">
+      <div class="logo-tag">// JEE Tracker</div>
+      <h1>Progress<br>Dashboard</h1>
+    </div>
+    <div class="header-right">
+      <div class="header-stats">
+        <div class="hstat"><div class="hstat-val" id="total-tests">0</div><div class="hstat-label">Total Tests</div></div>
+        <div class="hstat"><div class="hstat-val" id="best-pct">—</div><div class="hstat-label">Best %</div></div>
+      </div>
+      <button class="logout-btn" onclick="logout()">⊘ Disconnect Token</button>
+    </div>
+  </header>
+
+  <div class="summary-strip">
+    <div class="sstat" id="ss-11m"><div class="sstat-val" id="ss-11m-v">—</div><div class="sstat-label">11th Mains avg</div></div>
+    <div class="sstat" id="ss-11a"><div class="sstat-val" id="ss-11a-v">—</div><div class="sstat-label">11th Adv avg</div></div>
+    <div class="sstat" id="ss-12m"><div class="sstat-val" id="ss-12m-v">—</div><div class="sstat-label">12th Mains avg</div></div>
+    <div class="sstat" id="ss-12a"><div class="sstat-val" id="ss-12a-v">—</div><div class="sstat-label">12th Adv avg</div></div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchClass('11')">Class 11th</button>
+    <button class="tab-btn" onclick="switchClass('12')">Class 12th</button>
+  </div>
+
+  <div id="section-11" class="section active"></div>
+  <div id="section-12" class="section"></div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────────────────────
+const GH_OWNER = 'pratyakshjha';
+const GH_REPO  = 'jee';
+const GH_FILE  = 'tracker-data.json';
+const GH_API   = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+
+const MAX = {
+  mains:{ total:300, phy:100, chem:100, maths:100 },
+  adv:  { total:180, phy:60,  chem:60,  maths:60  }
+};
+const SUBS     = ['minor','major','review'];
+const SUBJECTS = ['phy','chem','maths'];
+const SUBJ_COLORS = { phy:'#818cf8', chem:'#fb7185', maths:'#fbbf24' };
+const SUBJ_FILL   = { phy:'rgba(129,140,248,0.08)', chem:'rgba(251,113,133,0.08)', maths:'rgba(251,191,36,0.08)' };
+const SUB_COLORS  = { minor:{line:'#f97316',fill:'rgba(249,115,22,0.07)'}, major:{line:'#00e5ff',fill:'rgba(0,229,255,0.07)'}, review:{line:'#22d3a5',fill:'rgba(34,211,165,0.07)'} };
+const BADGE_CLS   = { minor:'badge-minor', major:'badge-major', review:'badge-review' };
+const TOKEN_KEY   = 'jee_gh_token';
+const SHA_KEY     = 'jee_gh_sha';
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+function defaultData() {
+  const d={};
+  ['11','12'].forEach(cls=>{
+    d[cls]={};
+    ['mains','adv'].forEach(test=>{
+      d[cls][test]={};
+      SUBS.forEach(sub=>{ d[cls][test][sub]=[]; });
+    });
+  });
+  return d;
+}
+
+let data         = defaultData();
+let ghToken      = localStorage.getItem(TOKEN_KEY) || '';
+let ghSha        = localStorage.getItem(SHA_KEY) || '';
+let saveTimeout  = null;
+let currentClass = '11';
+let currentTest  = {'11':'mains','12':'mains'};
+let currentInner = {'11':'overview','12':'overview'};
+let charts       = {};
+
+// ── GITHUB API ────────────────────────────────────────────────────────────────
+async function ghFetch(method, body) {
+  const opts = {
+    method,
+    headers: {
+      'Authorization': `token ${ghToken}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(GH_API, opts);
+  return res;
+}
+
+async function loadFromGitHub() {
+  try {
+    const res = await ghFetch('GET');
+    if (res.status === 401 || res.status === 403) {
+      showTokenScreen('Token is invalid or expired. Please reconnect.');
+      return false;
+    }
+    if (res.status === 404) {
+      // File doesn't exist yet — start fresh
+      ghSha = '';
+      localStorage.removeItem(SHA_KEY);
+      data = defaultData();
+      return true;
+    }
+    const json = await res.json();
+    ghSha = json.sha;
+    localStorage.setItem(SHA_KEY, ghSha);
+    const decoded = atob(json.content.replace(/\n/g,''));
+    data = JSON.parse(decoded);
+    return true;
+  } catch(e) {
+    showToast('Failed to load data', '#f87171');
+    return false;
+  }
+}
+
+async function saveToGitHub() {
+  setSyncBar('saving');
+  try {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    const body = {
+      message: `update tracker data ${new Date().toISOString()}`,
+      content,
+      ...(ghSha ? { sha: ghSha } : {})
+    };
+    const res = await ghFetch('PUT', body);
+    if (res.status === 401 || res.status === 403) {
+      setSyncBar('error');
+      showToast('Token error — please reconnect', '#f87171');
+      return;
+    }
+    if (!res.ok) {
+      // SHA conflict — re-fetch and retry once
+      const refetch = await ghFetch('GET');
+      if (refetch.ok) {
+        const j = await refetch.json();
+        ghSha = j.sha;
+        localStorage.setItem(SHA_KEY, ghSha);
+        body.sha = ghSha;
+        const retry = await ghFetch('PUT', body);
+        if (!retry.ok) { setSyncBar('error'); showToast('Save failed', '#f87171'); return; }
+        const rj = await retry.json();
+        ghSha = rj.content.sha;
+        localStorage.setItem(SHA_KEY, ghSha);
+      }
+    } else {
+      const j = await res.json();
+      ghSha = j.content.sha;
+      localStorage.setItem(SHA_KEY, ghSha);
+    }
+    setSyncBar('saved');
+    showToast('Saved to GitHub ✓', '#22d3a5');
+    setTimeout(()=>setSyncBar(''),2000);
+  } catch(e) {
+    setSyncBar('error');
+    showToast('Network error', '#f87171');
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveToGitHub, 800);
+}
+
+// ── SYNC UI ───────────────────────────────────────────────────────────────────
+function setSyncBar(state) {
+  const bar = document.getElementById('sync-bar');
+  bar.className = state ? state : '';
+}
+
+let toastTimer;
+function showToast(msg, color) {
+  const toast = document.getElementById('sync-toast');
+  const dot   = document.getElementById('sync-dot');
+  const txt   = document.getElementById('sync-msg');
+  dot.style.background = color;
+  txt.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>toast.classList.remove('show'), 2500);
+}
+
+// ── TOKEN SCREEN ──────────────────────────────────────────────────────────────
+function showTokenScreen(err='') {
+  document.getElementById('loading-overlay').classList.add('hidden');
+  document.getElementById('token-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+  if (err) document.getElementById('token-err').textContent = err;
+}
+
+async function submitToken() {
+  const input = document.getElementById('token-input').value.trim();
+  if (!input) { document.getElementById('token-err').textContent='Please enter a token.'; return; }
+  ghToken = input;
+  localStorage.setItem(TOKEN_KEY, ghToken);
+  document.getElementById('token-err').textContent='';
+  document.getElementById('token-screen').style.display='none';
+  document.getElementById('loading-overlay').classList.remove('hidden');
+  const ok = await loadFromGitHub();
+  if (ok) initApp();
+}
+
+function logout() {
+  if(!confirm('Disconnect token? Your data on GitHub stays safe.')) return;
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(SHA_KEY);
+  ghToken=''; ghSha='';
+  document.getElementById('app').style.display='none';
+  showTokenScreen();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+async function boot() {
+  if (!ghToken) {
+    showTokenScreen();
+    return;
+  }
+  const ok = await loadFromGitHub();
+  if (ok) initApp();
+}
+
+function initApp() {
+  document.getElementById('loading-overlay').classList.add('hidden');
+  document.getElementById('token-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  ['11','12'].forEach(cls=>{
+    buildSection(cls);
+    renderCards(cls);
+    renderOverviewChart(cls);
+    renderSubjectCards(cls);
+    renderSubjectChart(cls);
+  });
+  updateSummary();
+  updateHeader();
+}
+
+// ── BUILD SECTION ─────────────────────────────────────────────────────────────
+function buildSection(cls) {
+  document.getElementById('section-'+cls).innerHTML = `
+    <div class="inner-tabs">
+      <button class="inner-tab active" id="itab-${cls}-overview" onclick="switchInner('${cls}','overview')">Overview</button>
+      <button class="inner-tab" id="itab-${cls}-subjects" onclick="switchInner('${cls}','subjects')">Subjects</button>
+    </div>
+    <div class="test-tabs">
+      <button class="test-tab mains active" id="ttab-${cls}-mains" onclick="switchTest('${cls}','mains')">Mains</button>
+      <button class="test-tab" id="ttab-${cls}-adv" onclick="switchTest('${cls}','adv')">Advanced</button>
+    </div>
+    <div class="inner-pane active" id="pane-${cls}-overview">
+      <div class="chart-section">
+        <div class="chart-header">
+          <div><div class="chart-title">Score Trend — Class ${cls}</div><div class="chart-sub" id="osub-${cls}">Mains · Minor / Major / Review</div></div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Minor</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#00e5ff"></div>Major</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#22d3a5"></div>Review</div>
+          </div>
+        </div>
+        <canvas id="chart-o-${cls}"></canvas>
+      </div>
+      <div class="cards-row" id="cards-${cls}"></div>
+    </div>
+    <div class="inner-pane" id="pane-${cls}-subjects">
+      <div class="chart-section">
+        <div class="chart-header">
+          <div><div class="chart-title">Subject Trend — Class ${cls}</div><div class="chart-sub" id="ssub-${cls}">Mains · Phy / Chem / Maths</div></div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#818cf8"></div>Physics</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fb7185"></div>Chemistry</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Maths</div>
+          </div>
+        </div>
+        <canvas id="chart-s-${cls}"></canvas>
+      </div>
+      <div class="subj-cards" id="subjcards-${cls}"></div>
+    </div>`;
+}
+
+// ── ROUTING ───────────────────────────────────────────────────────────────────
+function switchClass(cls) {
+  currentClass=cls;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&cls==='11')||(i===1&&cls==='12')));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('section-'+cls).classList.add('active');
+  refreshPane(cls);
+}
+
+function switchInner(cls,pane) {
+  currentInner[cls]=pane;
+  ['overview','subjects'].forEach(p=>{
+    document.getElementById('itab-'+cls+'-'+p).classList.toggle('active',p===pane);
+    document.getElementById('pane-'+cls+'-'+p).classList.toggle('active',p===pane);
+  });
+  refreshPane(cls);
+}
+
+function switchTest(cls,test) {
+  currentTest[cls]=test;
+  ['mains','adv'].forEach(t=>{
+    const btn=document.getElementById('ttab-'+cls+'-'+t);
+    btn.classList.remove('active','mains');
+    if(t===test){btn.classList.add('active');if(t==='mains')btn.classList.add('mains');}
+  });
+  refreshPane(cls);
+}
+
+function refreshPane(cls) {
+  const inner=currentInner[cls], test=currentTest[cls];
+  if(inner==='overview'){
+    document.getElementById('osub-'+cls).textContent=(test==='mains'?'Mains':'Advanced')+' · Minor / Major / Review';
+    renderCards(cls); renderOverviewChart(cls);
+  } else {
+    document.getElementById('ssub-'+cls).textContent=(test==='mains'?'Mains':'Advanced')+' · Phy / Chem / Maths (all subcategories)';
+    renderSubjectCards(cls); renderSubjectChart(cls);
+  }
+}
+
+// ── OVERVIEW CARDS ────────────────────────────────────────────────────────────
+function scColor(pct){return pct>=70?'sc-good':pct>=45?'sc-mid':'sc-low';}
+
+function renderCards(cls) {
+  const test=currentTest[cls], max=MAX[test];
+  const container=document.getElementById('cards-'+cls);
+  container.innerHTML='';
+  SUBS.forEach(sub=>{
+    const entries=data[cls][test][sub];
+    const avg=entries.length?Math.round(entries.reduce((s,e)=>s+e.total/max.total*100,0)/entries.length):null;
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`
+      <div class="card-header">
+        <span class="card-title">${sub}</span>
+        <span class="card-badge ${BADGE_CLS[sub]}" id="badge-${cls}-${test}-${sub}">${avg!==null?avg+'%':'no data'}</span>
+      </div>
+      <div class="entry-list" id="list-${cls}-${test}-${sub}"></div>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group"><div class="form-label">Label</div><input class="wide" id="lbl-${cls}-${test}-${sub}" placeholder="e.g. PT-1" maxlength="12"/></div>
+          <div class="form-group"><div class="form-label">Total (/${max.total})</div><input type="number" id="tot-${cls}-${test}-${sub}" placeholder="${max.total}" min="0" max="${max.total}"/></div>
+        </div>
+        <div class="add-form-row">
+          <div class="form-group"><div class="form-label" style="color:var(--phy)">Phy (/${max.phy})</div><input type="number" id="phy-${cls}-${test}-${sub}" placeholder="${max.phy}" min="0" max="${max.phy}"/></div>
+          <div class="form-group"><div class="form-label" style="color:var(--chem)">Chem (/${max.chem})</div><input type="number" id="chem-${cls}-${test}-${sub}" placeholder="${max.chem}" min="0" max="${max.chem}"/></div>
+          <div class="form-group"><div class="form-label" style="color:var(--maths)">Maths (/${max.maths})</div><input type="number" id="mat-${cls}-${test}-${sub}" placeholder="${max.maths}" min="0" max="${max.maths}"/></div>
+          <button class="add-btn" onclick="addEntry('${cls}','${test}','${sub}')">+ Add</button>
+        </div>
+      </div>`;
+    container.appendChild(card);
+    renderList(cls,test,sub);
+  });
+}
+
+function renderList(cls,test,sub) {
+  const entries=data[cls][test][sub], max=MAX[test];
+  const list=document.getElementById(`list-${cls}-${test}-${sub}`);
+  if(!list)return;
+  if(!entries.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">◌</div>No entries yet</div>';return;}
+  list.innerHTML='';
+  entries.forEach((e,i)=>{
+    const pct=Math.round(e.total/max.total*100);
+    const div=document.createElement('div');
+    div.className='entry-item';
+    div.innerHTML=`
+      <div class="entry-top">
+        <span class="entry-label">${e.label||'#'+(i+1)}</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="entry-total ${scColor(pct)}">${e.total}/${max.total} <span style="color:var(--muted);font-size:10px">(${pct}%)</span></span>
+          <button class="del-btn" onclick="deleteEntry('${cls}','${test}','${sub}',${i})">×</button>
+        </div>
+      </div>
+      <div class="entry-subjects">
+        <span class="esub esub-phy">P ${e.phy}/${max.phy}</span>
+        <span class="esub esub-chem">C ${e.chem}/${max.chem}</span>
+        <span class="esub esub-maths">M ${e.maths}/${max.maths}</span>
+      </div>`;
+    list.appendChild(div);
+  });
+  list.scrollTop=list.scrollHeight;
+}
+
+// ── ADD / DELETE ──────────────────────────────────────────────────────────────
+function addEntry(cls,test,sub) {
+  const max=MAX[test];
+  const lbl=document.getElementById(`lbl-${cls}-${test}-${sub}`).value.trim();
+  const totEl=document.getElementById(`tot-${cls}-${test}-${sub}`);
+  const phyEl=document.getElementById(`phy-${cls}-${test}-${sub}`);
+  const cheEl=document.getElementById(`chem-${cls}-${test}-${sub}`);
+  const matEl=document.getElementById(`mat-${cls}-${test}-${sub}`);
+  const total=parseFloat(totEl.value), phy=parseFloat(phyEl.value), chem=parseFloat(cheEl.value), maths=parseFloat(matEl.value);
+  const inputs=[totEl,phyEl,cheEl,matEl];
+  let valid=true;
+  if(isNaN(total)||total<0||total>max.total){totEl.style.borderColor='#f87171';valid=false;}else totEl.style.borderColor='';
+  if(isNaN(phy)||phy<0||phy>max.phy){phyEl.style.borderColor='#f87171';valid=false;}else phyEl.style.borderColor='';
+  if(isNaN(chem)||chem<0||chem>max.chem){cheEl.style.borderColor='#f87171';valid=false;}else cheEl.style.borderColor='';
+  if(isNaN(maths)||maths<0||maths>max.maths){matEl.style.borderColor='#f87171';valid=false;}else matEl.style.borderColor='';
+  if(!valid){setTimeout(()=>inputs.forEach(el=>el.style.borderColor=''),1200);return;}
+  const label=lbl||`Test ${data[cls][test][sub].length+1}`;
+  data[cls][test][sub].push({label,total,phy,chem,maths,date:new Date().toLocaleDateString('en-IN')});
+  inputs.forEach(el=>el.value='');
+  document.getElementById(`lbl-${cls}-${test}-${sub}`).value='';
+  renderList(cls,test,sub);
+  updateBadge(cls,test,sub);
+  renderOverviewChart(cls);
+  renderSubjectChart(cls);
+  renderSubjectCards(cls);
+  updateSummary();
+  updateHeader();
+  scheduleSave();
+}
+
+function deleteEntry(cls,test,sub,idx) {
+  data[cls][test][sub].splice(idx,1);
+  renderList(cls,test,sub);
+  updateBadge(cls,test,sub);
+  renderOverviewChart(cls);
+  renderSubjectChart(cls);
+  renderSubjectCards(cls);
+  updateSummary();
+  updateHeader();
+  scheduleSave();
+}
+
+function updateBadge(cls,test,sub) {
+  const entries=data[cls][test][sub], max=MAX[test];
+  const badge=document.getElementById(`badge-${cls}-${test}-${sub}`);
+  if(!badge)return;
+  badge.textContent=entries.length?Math.round(entries.reduce((s,e)=>s+e.total/max.total*100,0)/entries.length)+'%':'no data';
+}
+
+// ── CHARTS ────────────────────────────────────────────────────────────────────
+function renderOverviewChart(cls) {
+  const test=currentTest[cls], key='o-'+cls;
+  if(charts[key])charts[key].destroy();
+  const maxLen=Math.max(...SUBS.map(s=>data[cls][test][s].length),1);
+  const labels=Array.from({length:maxLen},(_,i)=>`#${i+1}`);
+  const maxT=MAX[test].total;
+  charts[key]=buildLineChart('chart-o-'+cls,labels,SUBS.map(sub=>({
+    label:sub.charAt(0).toUpperCase()+sub.slice(1),
+    data:data[cls][test][sub].map(e=>Math.round(e.total/maxT*100)),
+    borderColor:SUB_COLORS[sub].line,backgroundColor:SUB_COLORS[sub].fill,
+    tension:.4,fill:true,pointBackgroundColor:SUB_COLORS[sub].line,
+    pointBorderColor:'#0e1117',pointBorderWidth:2,pointRadius:5,pointHoverRadius:7
+  })));
+}
+
+function renderSubjectChart(cls) {
+  const test=currentTest[cls], key='s-'+cls;
+  if(charts[key])charts[key].destroy();
+  const allEntries=SUBS.flatMap(sub=>data[cls][test][sub].map((e,i)=>({...e,sub,i})));
+  const labels=allEntries.length?allEntries.map(e=>`${e.label||e.sub+' #'+(e.i+1)}`):['No data'];
+  const maxs=MAX[test];
+  charts[key]=buildLineChart('chart-s-'+cls,labels,SUBJECTS.map(subj=>({
+    label:subj==='phy'?'Physics':subj==='chem'?'Chemistry':'Maths',
+    data:allEntries.length?allEntries.map(e=>Math.round(e[subj]/maxs[subj]*100)):[null],
+    borderColor:SUBJ_COLORS[subj],backgroundColor:SUBJ_FILL[subj],
+    tension:.4,fill:true,pointBackgroundColor:SUBJ_COLORS[subj],
+    pointBorderColor:'#0e1117',pointBorderWidth:2,pointRadius:5,pointHoverRadius:7
+  })));
+}
+
+function renderSubjectCards(cls) {
+  const test=currentTest[cls], maxs=MAX[test];
+  const container=document.getElementById('subjcards-'+cls);
+  if(!container)return;
+  container.innerHTML='';
+  const allEntries=SUBS.flatMap(sub=>data[cls][test][sub].map((e,i)=>({...e,sub,i})));
+  SUBJECTS.forEach(subj=>{
+    const avg=allEntries.length?Math.round(allEntries.reduce((s,e)=>s+e[subj]/maxs[subj]*100,0)/allEntries.length):null;
+    const card=document.createElement('div');
+    card.className=`subj-card subj-${subj}`;
+    card.innerHTML=`
+      <div class="subj-card-header">
+        <span class="subj-name">${subj==='phy'?'Physics':subj==='chem'?'Chemistry':'Mathematics'}</span>
+        <span class="subj-avg">${avg!==null?avg+'% avg':'no data'}</span>
+      </div>
+      <div class="entry-list">
+        ${allEntries.length?allEntries.map((e,i)=>{
+          const pct=Math.round(e[subj]/maxs[subj]*100);
+          return `<div class="entry-item"><div class="entry-top">
+            <span class="entry-label">${e.label||'#'+(i+1)} <span style="color:var(--muted);font-size:9px">[${e.sub}]</span></span>
+            <span class="entry-total ${scColor(pct)}">${e[subj]}/${maxs[subj]} <span style="color:var(--muted);font-size:10px">(${pct}%)</span></span>
+          </div></div>`;
+        }).join(''):'<div class="empty-state"><div class="empty-icon">◌</div>No data yet</div>'}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+function buildLineChart(canvasId,labels,datasets) {
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  return new Chart(ctx,{
+    type:'line',data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#141720',borderColor:'rgba(255,255,255,0.08)',borderWidth:1,
+          titleColor:'#e8eaf0',bodyColor:'#a0aec0',
+          titleFont:{family:'Space Mono',size:11},bodyFont:{family:'Space Mono',size:10},
+          callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y!==null?c.parsed.y+'%':'n/a'}`}
+        }
+      },
+      scales:{
+        x:{ticks:{color:'#5a6070',font:{family:'Space Mono',size:10},maxRotation:40},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.05)'}},
+        y:{min:0,max:100,ticks:{color:'#5a6070',font:{family:'Space Mono',size:10},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'},border:{color:'rgba(255,255,255,0.05)'}}
+      }
+    }
+  });
+}
+
+// ── SUMMARY / HEADER ──────────────────────────────────────────────────────────
+function calcAvg(cls,test) {
+  const all=SUBS.flatMap(s=>data[cls][test][s]);
+  if(!all.length)return null;
+  const maxT=MAX[test].total;
+  return Math.round(all.reduce((s,e)=>s+e.total/maxT*100,0)/all.length);
+}
+
+function updateSummary() {
+  [['11','mains','ss-11m'],['11','adv','ss-11a'],['12','mains','ss-12m'],['12','adv','ss-12a']].forEach(([cls,test,id])=>{
+    const avg=calcAvg(cls,test);
+    document.getElementById(id+'-v').textContent=avg!==null?avg+'%':'—';
+    document.getElementById(id).classList.toggle('lit',avg!==null);
+  });
+}
+
+function updateHeader() {
+  const all=['11','12'].flatMap(cls=>['mains','adv'].flatMap(test=>SUBS.flatMap(sub=>data[cls][test][sub])));
+  document.getElementById('total-tests').textContent=all.length;
+  if(all.length){
+    const best=Math.max(...['11','12'].flatMap(cls=>['mains','adv'].flatMap(test=>{
+      const maxT=MAX[test].total;
+      return SUBS.flatMap(sub=>data[cls][test][sub].map(e=>Math.round(e.total/maxT*100)));
+    })));
+    document.getElementById('best-pct').textContent=best+'%';
+  } else document.getElementById('best-pct').textContent='—';
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
