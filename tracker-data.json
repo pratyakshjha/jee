@@ -1,7 +1,16 @@
 {
   "11": {
     "mains": {
-      "minor": [],
+      "minor": [
+        {
+          "label": "1",
+          "total": 0,
+          "phy": 0,
+          "chem": 0,
+          "maths": 0,
+          "date": "17/3/2026"
+        }
+      ],
       "major": [],
       "review": []
     },
