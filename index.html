@@ -7,13 +7,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
 html,body{
-  width:100%;min-height:100vh;
+  width:100%;height:100vh;
   background:#060608;
   color:#e8e8e0;
   font-family:'DM Mono',monospace;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
+  overflow:hidden;
 }
 
 body::before{
@@ -26,9 +28,10 @@ body::before{
 .wrap{
   position:relative;z-index:1;
   width:100%;max-width:900px;
-  padding:0 32px 80px;
-  display:flex;flex-direction:column;
+  padding:0 32px;
+  display:flex;
   align-items:center;
+  justify-content:center;
 }
 
 .countdowns{
@@ -44,9 +47,9 @@ body::before{
 }
 
 .countdown{
-  padding:40px 48px;
+  padding:24px 32px;
   display:flex;flex-direction:column;
-  align-items:center;gap:20px;
+  align-items:center;gap:14px;
 }
 
 .exam-label{
@@ -74,7 +77,7 @@ body::before{
 
 .segments{
   display:flex;
-  gap:16px;
+  gap:12px;
   align-items:flex-end;
 }
 
@@ -85,7 +88,7 @@ body::before{
 
 .seg-num{
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(3rem,7vw,5.5rem);
+  font-size:clamp(2.8rem,6vw,5rem);
   line-height:1;
   color:#e8e8e0;
   min-width:2ch;
@@ -105,9 +108,9 @@ body::before{
 
 .seg-sep{
   font-family:'Bebas Neue',sans-serif;
-  font-size:clamp(2.5rem,6vw,4.5rem);
+  font-size:clamp(2.2rem,5vw,4rem);
   color:#222;
-  margin-bottom:16px;
+  margin-bottom:14px;
   line-height:1;
 }
 
@@ -119,7 +122,6 @@ body::before{
   background:#1a1a1a;
   border-radius:1px;
   overflow:hidden;
-  margin-top:8px;
 }
 .progress-bar{
   height:100%;
@@ -131,8 +133,10 @@ body::before{
 .btn-wrap{
   position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
   z-index:10;
-  animation:fadeInBtn 1.5s 0.4s ease both;opacity:0;
+  animation:fadeInBtn 1.5s 0.4s ease both;
+  opacity:0;
 }
+
 .tracker-btn{
   background:transparent;
   border:0.5px solid #2a2a2a;
@@ -162,8 +166,8 @@ body::before{
 @media(max-width:600px){
   .countdowns{grid-template-columns:1fr;grid-template-rows:auto 1px auto;}
   .divider-v{width:100%;height:1px;background:linear-gradient(90deg,transparent,#ffffff18,transparent);}
-  .countdown{padding:28px 24px;}
-  .seg-num{font-size:3.5rem;}
+  .countdown{padding:20px 16px;}
+  .seg-num{font-size:2.8rem;}
 }
 </style>
 </head>
