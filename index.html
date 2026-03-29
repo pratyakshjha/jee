@@ -3,244 +3,263 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>todoOS</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<title>JEE 2027</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#0d0f14;--surface:#161820;--surface2:#1e2028;--border:#2a2d3a;--border2:#363a4a;
-  --accent:#4f8ef7;--accent2:#7c5cfc;--text:#e4e6f0;--muted:#6e7290;
-  --taskbar:#111318ee;--glass:#ffffff0a;--glass-border:#ffffff14;--radius:12px;--radius-sm:8px;
+html,body{
+  width:100%;height:100%;
+  background:#060608;
+  color:#e8e8e0;
+  font-family:'DM Mono',monospace;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
 }
-html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);user-select:none;}
-.wallpaper{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 60% at 20% 80%,#1a1060 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 80% 20%,#0d2a5e 0%,transparent 60%),radial-gradient(ellipse 100% 100% at 50% 50%,#0a0c14 0%,#0d0f18 100%);}
-.wallpaper::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle,#ffffff08 1px,transparent 1px);background-size:32px 32px;}
-.desktop{position:fixed;inset:0;z-index:1;padding:24px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;}
-.icon{display:flex;flex-direction:column;align-items:center;gap:6px;width:80px;cursor:pointer;padding:8px 4px;border-radius:var(--radius-sm);transition:background 0.15s;}
-.icon:hover{background:#ffffff10;}
-.icon:active{background:#ffffff18;transform:scale(0.97);}
-.icon-img{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;}
-.icon-label{font-size:11px;color:var(--text);text-align:center;text-shadow:0 1px 4px #000a;line-height:1.3;}
-.icon-folder{background:linear-gradient(145deg,#2a5fc4,#1a3d8f);}
-.icon-jee{background:linear-gradient(145deg,#1a7a4a,#0f5233);}
-.icon-about{background:linear-gradient(145deg,#7c3aed,#4c1d95);}
-.icon-terminal{background:linear-gradient(145deg,#1e1e1e,#333);}
-.window{position:fixed;z-index:100;background:#13151cee;border:0.5px solid var(--glass-border);border-radius:16px;backdrop-filter:blur(24px);box-shadow:0 24px 80px #00000080,0 0 0 0.5px #ffffff08 inset;display:flex;flex-direction:column;overflow:hidden;min-width:300px;min-height:180px;}
-.window.hidden{display:none;}
-.titlebar{height:38px;display:flex;align-items:center;padding:0 12px;gap:8px;background:#ffffff06;border-bottom:0.5px solid var(--glass-border);cursor:move;flex-shrink:0;}
-.titlebar-title{font-size:12px;font-weight:500;color:var(--text);flex:1;text-align:center;padding-right:56px;}
-.win-btn{width:12px;height:12px;border-radius:50%;border:none;cursor:pointer;flex-shrink:0;}
-.btn-close{background:#ff5f57;}.btn-min{background:#febc2e;}.btn-max{background:#28c840;}
-.win-btn:hover{filter:brightness(1.2);}
-.win-content{flex:1;overflow-y:auto;padding:16px;}
-.win-content::-webkit-scrollbar{width:4px;}
-.win-content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
-.proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.proj-card{background:var(--glass);border:0.5px solid var(--glass-border);border-radius:var(--radius-sm);padding:14px;cursor:pointer;transition:background 0.15s,border-color 0.15s;text-decoration:none;color:inherit;display:block;}
-.proj-card:hover{background:#ffffff12;border-color:var(--accent);}
-.proj-card-icon{font-size:20px;margin-bottom:8px;}
-.proj-card-title{font-size:12px;font-weight:500;margin-bottom:4px;}
-.proj-card-desc{font-size:10px;color:var(--muted);line-height:1.4;}
-.proj-badge{display:inline-block;font-size:9px;padding:1px 6px;border-radius:20px;margin-top:6px;background:#4f8ef720;color:var(--accent);border:0.5px solid #4f8ef740;}
-.taskbar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:200;background:var(--taskbar);backdrop-filter:blur(32px);border:0.5px solid var(--glass-border);border-radius:18px;margin-bottom:12px;padding:8px 16px;display:flex;align-items:center;gap:4px;}
-.tb-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;transition:background 0.15s,transform 0.15s;position:relative;}
-.tb-icon:hover{background:#ffffff14;transform:translateY(-4px);}
-.tb-icon:active{transform:translateY(-2px);}
-.tb-icon.active::after{content:'';position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--accent);}
-.tb-sep{width:0.5px;height:28px;background:var(--glass-border);margin:0 4px;}
-.clock-widget{position:fixed;top:20px;right:24px;z-index:10;text-align:right;}
-.clock-time{font-size:32px;font-weight:300;letter-spacing:-1px;line-height:1;}
-.clock-date{font-size:11px;color:var(--muted);margin-top:2px;}
-.boot{position:fixed;inset:0;z-index:999;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity 0.8s ease;}
-.boot.fade{opacity:0;pointer-events:none;}
-.boot-logo{font-size:28px;font-weight:300;letter-spacing:8px;color:#fff;opacity:0.9;}
-.boot-logo span{color:var(--accent);}
-.boot-bar-wrap{width:200px;height:2px;background:#ffffff20;border-radius:1px;overflow:hidden;}
-.boot-bar{height:100%;width:0%;background:var(--accent);border-radius:1px;transition:width 0.1s;}
-.resize-handle{position:absolute;bottom:0;right:0;width:16px;height:16px;cursor:se-resize;background:linear-gradient(135deg,transparent 50%,var(--border2) 50%);border-bottom-right-radius:16px;}
-.ctx-menu{position:fixed;z-index:500;background:#1a1c25ee;backdrop-filter:blur(16px);border:0.5px solid var(--glass-border);border-radius:10px;padding:4px;min-width:160px;box-shadow:0 8px 32px #00000060;}
-.ctx-item{padding:7px 12px;font-size:12px;border-radius:6px;cursor:pointer;color:var(--text);transition:background 0.1s;}
-.ctx-item:hover{background:#ffffff14;}
-.ctx-sep{height:0.5px;background:var(--glass-border);margin:3px 0;}
+
+/* Subtle noise bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size:256px 256px;
+  pointer-events:none;z-index:0;opacity:0.6;
+}
+
+/* Faint horizontal line across middle */
+body::after{
+  content:'';position:fixed;
+  left:0;right:0;top:50%;height:1px;
+  background:linear-gradient(90deg,transparent,#ffffff08,transparent);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{
+  position:relative;z-index:1;
+  width:100%;max-width:900px;
+  padding:0 32px;
+  display:flex;flex-direction:column;
+  align-items:center;gap:0;
+}
+
+/* Two countdowns side by side */
+.countdowns{
+  display:grid;
+  grid-template-columns:1fr 1px 1fr;
+  width:100%;
+  gap:0;
+  animation:fadeIn 1.2s ease both;
+}
+
+.divider-v{
+  background:linear-gradient(180deg,transparent,#ffffff18,transparent);
+  align-self:stretch;
+}
+
+.countdown{
+  padding:40px 48px;
+  display:flex;flex-direction:column;
+  align-items:center;gap:20px;
+}
+
+.exam-label{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  font-weight:300;
+  letter-spacing:5px;
+  text-transform:uppercase;
+  color:#666;
+}
+
+.exam-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2rem,5vw,3.4rem);
+  letter-spacing:3px;
+  line-height:1;
+  color:#e8e8e0;
+}
+
+.exam-date{
+  font-size:10px;
+  letter-spacing:3px;
+  color:#444;
+  font-weight:300;
+}
+
+.segments{
+  display:flex;
+  gap:16px;
+  align-items:flex-end;
+}
+
+.seg{
+  display:flex;flex-direction:column;
+  align-items:center;gap:6px;
+}
+
+.seg-num{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(3rem,7vw,5.5rem);
+  line-height:1;
+  color:#e8e8e0;
+  min-width:2ch;
+  text-align:center;
+  transition:color 0.3s;
+}
+
+.seg-num.tick{color:#fff;}
+
+.seg-unit{
+  font-size:9px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:#3a3a3a;
+  font-weight:300;
+}
+
+.seg-sep{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(2.5rem,6vw,4.5rem);
+  color:#222;
+  margin-bottom:16px;
+  line-height:1;
+}
+
+/* Urgency tint when < 30 days */
+.countdown.urgent .seg-num{color:#c0392b;}
+.countdown.urgent .exam-name{color:#e87070;}
+
+/* Progress bar */
+.progress-wrap{
+  width:100%;height:1px;
+  background:#1a1a1a;
+  border-radius:1px;
+  overflow:hidden;
+  margin-top:8px;
+}
+.progress-bar{
+  height:100%;
+  background:linear-gradient(90deg,#2a2a2a,#666);
+  border-radius:1px;
+  transition:width 1s linear;
+}
+
+/* Bottom button */
+.btn-wrap{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  z-index:10;
+  animation:fadeIn 1.5s 0.4s ease both;opacity:0;
+}
+.tracker-btn{
+  background:transparent;
+  border:0.5px solid #2a2a2a;
+  color:#444;
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  padding:10px 24px;
+  border-radius:40px;
+  cursor:pointer;
+  text-decoration:none;
+  display:block;
+  transition:border-color 0.2s,color 0.2s;
+}
+.tracker-btn:hover{border-color:#555;color:#aaa;}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* Fix btn-wrap fadeIn not resetting transform */
+.btn-wrap{animation:fadeInBtn 1.5s 0.4s ease both;}
+@keyframes fadeInBtn{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+
+@media(max-width:600px){
+  .countdowns{grid-template-columns:1fr;grid-template-rows:1fr 1px 1fr;}
+  .divider-v{width:auto;height:1px;background:linear-gradient(90deg,transparent,#ffffff18,transparent);}
+  .countdown{padding:28px 24px;}
+  .seg-num{font-size:3.5rem;}
+}
 </style>
 </head>
 <body>
-<div class="boot" id="boot">
-  <div class="boot-logo">todo<span>OS</span></div>
-  <div class="boot-bar-wrap"><div class="boot-bar" id="bootbar"></div></div>
-</div>
-<div class="wallpaper"></div>
-<div class="clock-widget">
-  <div class="clock-time" id="clock">00:00</div>
-  <div class="clock-date" id="date"></div>
-</div>
-<div class="desktop">
-  <div class="icon" ondblclick="openWindow('projects')">
-    <div class="icon-img icon-folder">📁</div>
-    <div class="icon-label">Projects</div>
-  </div>
-  <div class="icon" ondblclick="openWindow('jee')">
-    <div class="icon-img icon-jee">📊</div>
-    <div class="icon-label">JEE Tracker</div>
-  </div>
-  <div class="icon" ondblclick="openWindow('about')">
-    <div class="icon-img icon-about">👤</div>
-    <div class="icon-label">About Me</div>
-  </div>
-  <div class="icon" ondblclick="openWindow('terminal')">
-    <div class="icon-img icon-terminal">💻</div>
-    <div class="icon-label">Terminal</div>
-  </div>
-  <div class="icon" ondblclick="openWindow('mindboard')">
-    <div class="icon-img" style="background:linear-gradient(145deg,#1a3a5c,#0d2240);">🧠</div>
-    <div class="icon-label">MindBoard</div>
-  </div>
-</div>
 
-<!-- Projects Window -->
-<div class="window hidden" id="win-projects" style="width:400px;height:340px;top:80px;left:120px;">
-  <div class="titlebar" onmousedown="startDrag(event,'win-projects')">
-    <button class="win-btn btn-close" onclick="closeWindow('projects')"></button>
-    <button class="win-btn btn-min" onclick="closeWindow('projects')"></button>
-    <button class="win-btn btn-max"></button>
-    <div class="titlebar-title">Projects</div>
-  </div>
-  <div class="win-content">
-    <div class="proj-grid">
-      <a href="jee-tracker.html" class="proj-card">
-        <div class="proj-card-icon">📊</div>
-        <div class="proj-card-title">JEE Score Tracker</div>
-        <div class="proj-card-desc">Track mock scores and visualize progress over time.</div>
-      </a>
-      <div class="proj-card">
-        <div class="proj-card-icon">🎮</div>
-        <div class="proj-card-title">Stickman Game</div>
-        <div class="proj-card-desc">Pygame platformer. Work in progress.</div>
-        <span class="proj-badge">coming soon</span>
+<div class="wrap">
+  <div class="countdowns">
+
+    <!-- JEE Mains -->
+    <div class="countdown" id="cd-mains">
+      <div class="exam-label">Countdown to</div>
+      <div class="exam-name">JEE Mains</div>
+      <div class="exam-date">21 · 01 · 2027</div>
+      <div class="segments">
+        <div class="seg">
+          <div class="seg-num" id="m-days">000</div>
+          <div class="seg-unit">Days</div>
+        </div>
+        <div class="seg-sep">:</div>
+        <div class="seg">
+          <div class="seg-num" id="m-hrs">00</div>
+          <div class="seg-unit">Hours</div>
+        </div>
+        <div class="seg-sep">:</div>
+        <div class="seg">
+          <div class="seg-num" id="m-min">00</div>
+          <div class="seg-unit">Mins</div>
+        </div>
+        <div class="seg-sep">:</div>
+        <div class="seg">
+          <div class="seg-num" id="m-sec">00</div>
+          <div class="seg-unit">Secs</div>
+        </div>
       </div>
-      <div class="proj-card">
-        <div class="proj-card-icon">🌸</div>
-        <div class="proj-card-title">Anime Watchlist</div>
-        <div class="proj-card-desc">Track and rate your anime list.</div>
-        <span class="proj-badge">coming soon</span>
+      <div class="progress-wrap"><div class="progress-bar" id="m-prog"></div></div>
+    </div>
+
+    <div class="divider-v"></div>
+
+    <!-- JEE Advanced -->
+    <div class="countdown" id="cd-adv">
+      <div class="exam-label">Countdown to</div>
+      <div class="exam-name">JEE Advanced</div>
+      <div class="exam-date">10 · 05 · 2027</div>
+      <div class="segments">
+        <div class="seg">
+          <div class="seg-num" id="a-days">000</div>
+          <div class="seg-unit">Days</div>
+        </div>
+        <div class="seg-sep">:</div>
+        <div class="seg">
+          <div class="seg-num" id="a-hrs">00</div>
+          <div class="seg-unit">Hours</div>
+        </div>
+        <div class="seg-sep">:</div>
+        <div class="seg">
+          <div class="seg-num" id="a-min">00</div>
+          <div class="seg-unit">Mins</div>
+        </div>
+        <div class="seg-sep">:</div>
+        <div class="seg">
+          <div class="seg-num" id="a-sec">00</div>
+          <div class="seg-unit">Secs</div>
+        </div>
       </div>
-      <div class="proj-card">
-        <div class="proj-card-icon">🧮</div>
-        <div class="proj-card-title">Rank Predictor</div>
-        <div class="proj-card-desc">Estimate JEE rank from mock scores.</div>
-        <span class="proj-badge">coming soon</span>
-      </div>
+      <div class="progress-wrap"><div class="progress-bar" id="a-prog"></div></div>
     </div>
-  </div>
-  <div class="resize-handle" onmousedown="startResize(event,'win-projects')"></div>
-</div>
 
-<!-- JEE Window -->
-<div class="window hidden" id="win-jee" style="width:320px;height:260px;top:100px;left:160px;">
-  <div class="titlebar" onmousedown="startDrag(event,'win-jee')">
-    <button class="win-btn btn-close" onclick="closeWindow('jee')"></button>
-    <button class="win-btn btn-min" onclick="closeWindow('jee')"></button>
-    <button class="win-btn btn-max"></button>
-    <div class="titlebar-title">JEE Tracker</div>
-  </div>
-  <div class="win-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:100%;">
-    <div style="font-size:40px;">📊</div>
-    <div style="font-size:13px;font-weight:500;">JEE Score Tracker</div>
-    <div style="font-size:11px;color:var(--muted);">Track your mock test progress</div>
-    <a href="jee-tracker.html" style="margin-top:8px;padding:8px 20px;background:var(--accent);color:#fff;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;">Open Tracker</a>
-  </div>
-  <div class="resize-handle" onmousedown="startResize(event,'win-jee')"></div>
-</div>
-
-<!-- About Window -->
-<div class="window hidden" id="win-about" style="width:320px;height:300px;top:90px;left:140px;">
-  <div class="titlebar" onmousedown="startDrag(event,'win-about')">
-    <button class="win-btn btn-close" onclick="closeWindow('about')"></button>
-    <button class="win-btn btn-min" onclick="closeWindow('about')"></button>
-    <button class="win-btn btn-max"></button>
-    <div class="titlebar-title">About Me</div>
-  </div>
-  <div class="win-content" style="display:flex;flex-direction:column;gap:14px;">
-    <div style="display:flex;align-items:center;gap:14px;">
-      <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#4f8ef7,#7c5cfc);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;font-weight:600;color:#fff;">P</div>
-      <div>
-        <div style="font-size:15px;font-weight:500;">Pratyaksh</div>
-        <div style="font-size:11px;color:var(--muted);">JEE Aspirant · Developer</div>
-      </div>
-    </div>
-    <div style="border-top:0.5px solid var(--glass-border);padding-top:14px;">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">About</div>
-      <div style="font-size:12px;line-height:1.6;">Preparing for JEE 2027. I build tools, games, and websites when I should probably be studying. Anime enjoyer and Python/Pygame developer.</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#4f8ef720;color:var(--accent);border:0.5px solid #4f8ef740;">Python</span>
-      <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#7c5cfc20;color:#a78bfa;border:0.5px solid #7c5cfc40;">React</span>
-      <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#1a7a4a20;color:#34d399;border:0.5px solid #1a7a4a40;">Pygame</span>
-      <span style="font-size:10px;padding:3px 8px;border-radius:20px;background:#c0392b20;color:#f87171;border:0.5px solid #c0392b40;">JEE 2027</span>
-    </div>
-  </div>
-  <div class="resize-handle" onmousedown="startResize(event,'win-about')"></div>
-</div>
-
-<!-- Terminal Window -->
-<div class="window hidden" id="win-terminal" style="width:420px;height:280px;top:100px;left:100px;">
-  <div class="titlebar" onmousedown="startDrag(event,'win-terminal')">
-    <button class="win-btn btn-close" onclick="closeWindow('terminal')"></button>
-    <button class="win-btn btn-min" onclick="closeWindow('terminal')"></button>
-    <button class="win-btn btn-max"></button>
-    <div class="titlebar-title">Terminal</div>
-  </div>
-  <div style="flex:1;overflow-y:auto;padding:14px;background:#0a0c10;font-family:monospace;font-size:12px;line-height:1.6;" id="term-wrap">
-    <div style="color:#4f8ef7;">todoOS Terminal v1.0</div>
-    <div style="color:var(--muted);">Type 'help' for commands.</div>
-    <br/>
-    <div id="term-lines"></div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span style="color:#4f8ef7;">pratyaksh@todoOS:~$</span>
-      <input id="term-input" type="text" style="background:transparent;border:none;outline:none;color:var(--text);font-family:monospace;font-size:12px;flex:1;"/>
-    </div>
-  </div>
-  <div class="resize-handle" onmousedown="startResize(event,'win-terminal')"></div>
-</div>
-
-<!-- MindBoard Window -->
-<div class="window hidden" id="win-mindboard" style="width:360px;height:280px;top:90px;left:130px;">
-  <div class="titlebar" onmousedown="startDrag(event,'win-mindboard')">
-    <button class="win-btn btn-close" onclick="closeWindow('mindboard')"></button>
-    <button class="win-btn btn-min" onclick="closeWindow('mindboard')"></button>
-    <button class="win-btn btn-max"></button>
-    <div class="titlebar-title">MindBoard</div>
-  </div>
-  <div class="win-content" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:100%;">
-    <div style="font-size:40px;">🧠</div>
-    <div style="font-size:13px;font-weight:500;">MindBoard</div>
-    <div style="font-size:11px;color:var(--muted);">Infinite whiteboard & mind map</div>
-    <a href="mindboard.html" style="margin-top:8px;padding:8px 20px;background:var(--accent);color:#fff;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none;">Open MindBoard</a>
   </div>
 </div>
 
-<!-- Taskbar -->
-<div class="taskbar">
-  <div class="tb-icon" id="tb-projects" onclick="openWindow('projects')" title="Projects">📁</div>
-  <div class="tb-icon" id="tb-jee" onclick="openWindow('jee')" title="JEE Tracker">📊</div>
-  <div class="tb-icon" id="tb-about" onclick="openWindow('about')" title="About">👤</div>
-  <div class="tb-icon" id="tb-terminal" onclick="openWindow('terminal')" title="Terminal">💻</div>
-  <div class="tb-icon" id="tb-mindboard" onclick="openWindow('mindboard')" title="MindBoard">🧠</div>
-  <div class="tb-sep"></div>
-  <div class="tb-icon" onclick="window.open('https://github.com','_blank')" title="GitHub">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--text)"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12c0-5.523-4.477-10-10-10z"/></svg>
-  </div>
+<!-- JEE Tracker button -->
+<div class="btn-wrap">
+  <a href="jee-tracker.html" class="tracker-btn">score tracker →</a>
 </div>
 
-<!-- Context Menu -->
-<div class="ctx-menu hidden" id="ctx-menu">
-  <div class="ctx-item" onclick="hideCtx()">Change Wallpaper <span style="color:var(--muted);font-size:10px;">(soon)</span></div>
-  <div class="ctx-sep"></div>
-  <div class="ctx-item" onclick="openWindow('terminal');hideCtx()">Open Terminal</div>
-  <div class="ctx-item" onclick="openWindow('about');hideCtx()">About todoOS</div>
-</div>
-
-<!-- FreeDNS banner (required, hidden) -->
+<!-- FreeDNS (hidden, required) -->
 <div style="display:none;">
 <!-- begin freedns banner code -->
 <center><form target=_new action=https://freedns.afraid.org/subdomain/edit.php><table style="border-style=solid;border-width=1;border-color=black;" width=468 height=60 bgcolor=cccccc><tr><td align=middle><table border=0 cellpadding=2 cellspacing=0><tr><td align=middle colspan=3><div style="font-family: Verdana, Helvetica;font-size: 13px;color: black;hover: orange;"><a style="font-family: Verdana, Helvetica;font-size: 13px;color: black;hover: orange;" target=_new href=https://freedns.afraid.org/>Free DNS</a> provides easy shared DNS hosting &amp; URL forwarding</div></td></tr><tr><td align=middle valign=middle><input type=text size=15 name=subdomain value=yourname></td><td align=middle valign=middle><select name=edit_domain_id><option value=2>strangled.net<option value=29>mooo.com<option style="color:red;font-weight:bold;" value=0>Many more available...</select></td><td align=middle valign=middle><input type=submit name=submit value="next &gt;&gt;"></td></tr></table></td></tr></table><input type=hidden name=web_panel value=1><input type=hidden name=ref value=4108873></form></center>
@@ -248,94 +267,56 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',sans-serif;
 </div>
 
 <script>
-const winMap={projects:'win-projects',jee:'win-jee',about:'win-about',terminal:'win-terminal',mindboard:'win-mindboard'};
-let zTop=100;
+const MAINS  = new Date('2027-01-21T00:00:00');
+const ADV    = new Date('2027-05-10T00:00:00');
+// Approx start date for progress bars (JEE 2026 results ~June 2026)
+const START  = new Date('2026-06-01T00:00:00');
 
-function openWindow(id){
-  const el=document.getElementById(winMap[id]);
-  if(!el)return;
-  el.classList.remove('hidden');
-  el.style.zIndex=++zTop;
-  document.getElementById('tb-'+id)?.classList.add('active');
-  if(id==='terminal')document.getElementById('term-input')?.focus();
-}
-function closeWindow(id){
-  document.getElementById(winMap[id])?.classList.add('hidden');
-  document.getElementById('tb-'+id)?.classList.remove('active');
-}
+function pad(n,len=2){return String(Math.max(0,n)).padStart(len,'0');}
 
-function startDrag(e,winId){
-  if(e.target.classList.contains('win-btn'))return;
-  const el=document.getElementById(winId);
-  el.style.zIndex=++zTop;
-  const sx=e.clientX-el.offsetLeft,sy=e.clientY-el.offsetTop;
-  const move=e=>{
-    el.style.left=Math.max(0,Math.min(window.innerWidth-el.offsetWidth,e.clientX-sx))+'px';
-    el.style.top=Math.max(0,Math.min(window.innerHeight-el.offsetHeight,e.clientY-sy))+'px';
-  };
-  const up=()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);};
-  document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
-}
-
-function startResize(e,winId){
-  e.stopPropagation();
-  const el=document.getElementById(winId);
-  const sx=e.clientX,sy=e.clientY,sw=el.offsetWidth,sh=el.offsetHeight;
-  const move=e=>{el.style.width=Math.max(280,sw+e.clientX-sx)+'px';el.style.height=Math.max(180,sh+e.clientY-sy)+'px';};
-  const up=()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);};
-  document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
-}
-
-function updateClock(){
-  const n=new Date();
-  document.getElementById('clock').textContent=n.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
-  document.getElementById('date').textContent=n.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
-}
-updateClock();setInterval(updateClock,1000);
-
-const cmds={
-  help:()=>'Commands: help, about, projects, whoami, date, clear',
-  about:()=>'Pratyaksh — JEE 2027 aspirant, developer, anime enjoyer.',
-  projects:()=>'JEE Tracker (live) · Stickman Game (wip) · Anime Watchlist (wip) · Rank Predictor (wip)',
-  whoami:()=>'pratyaksh',
-  date:()=>new Date().toLocaleString('en-IN'),
-  clear:()=>{document.getElementById('term-lines').innerHTML='';return null;},
-};
-
-document.getElementById('term-input')?.addEventListener('keydown',function(e){
-  if(e.key!=='Enter')return;
-  const val=this.value.trim().toLowerCase();
-  const lines=document.getElementById('term-lines');
-  const echo=document.createElement('div');
-  echo.style.color='#6e7290';
-  echo.textContent='pratyaksh@todoOS:~$ '+this.value;
-  lines.appendChild(echo);
-  if(val){
-    const res=cmds[val]?cmds[val]():'Command not found: '+val+'. Type "help".';
-    if(res!==null){const out=document.createElement('div');out.style.color='#e4e6f0';out.textContent=res;lines.appendChild(out);}
+function update(target,daysId,hrsId,minId,secId,progId,wrapId){
+  const now=new Date();
+  const diff=target-now;
+  if(diff<=0){
+    document.getElementById(daysId).textContent='000';
+    document.getElementById(hrsId).textContent='00';
+    document.getElementById(minId).textContent='00';
+    document.getElementById(secId).textContent='00';
+    document.getElementById(progId).style.width='100%';
+    return;
   }
-  this.value='';
-  document.getElementById('term-wrap').scrollTop=99999;
-});
+  const days=Math.floor(diff/86400000);
+  const hrs=Math.floor((diff%86400000)/3600000);
+  const mins=Math.floor((diff%3600000)/60000);
+  const secs=Math.floor((diff%60000)/1000);
 
-document.addEventListener('contextmenu',e=>{
-  if(e.target.closest('.window')||e.target.closest('.taskbar')||e.target.closest('.icon'))return;
-  e.preventDefault();
-  const m=document.getElementById('ctx-menu');
-  m.classList.remove('hidden');
-  m.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
-  m.style.top=Math.min(e.clientY,window.innerHeight-120)+'px';
-});
-document.addEventListener('click',hideCtx);
-function hideCtx(){document.getElementById('ctx-menu').classList.add('hidden');}
+  const secEl=document.getElementById(secId);
+  secEl.textContent=pad(secs);
+  secEl.classList.add('tick');
+  setTimeout(()=>secEl.classList.remove('tick'),150);
 
-const bar=document.getElementById('bootbar');
-let p=0;
-const iv=setInterval(()=>{
-  p+=Math.random()*18+8;
-  bar.style.width=Math.min(100,p)+'%';
-  if(p>=100){clearInterval(iv);setTimeout(()=>{document.getElementById('boot').classList.add('fade');setTimeout(()=>document.getElementById('boot').remove(),800);},300);}
-},120);
+  document.getElementById(daysId).textContent=pad(days,3);
+  document.getElementById(hrsId).textContent=pad(hrs);
+  document.getElementById(minId).textContent=pad(mins);
+
+  // Progress bar: % of time elapsed from START to target
+  const total=target-START;
+  const elapsed=now-START;
+  const pct=Math.min(100,Math.max(0,(elapsed/total)*100));
+  document.getElementById(progId).style.width=pct+'%';
+
+  // Urgency
+  if(days<30)document.getElementById(wrapId).classList.add('urgent');
+  else document.getElementById(wrapId).classList.remove('urgent');
+}
+
+function tick(){
+  update(MAINS,'m-days','m-hrs','m-min','m-sec','m-prog','cd-mains');
+  update(ADV,  'a-days','a-hrs','a-min','a-sec','a-prog','cd-adv');
+}
+
+tick();
+setInterval(tick,1000);
 </script>
 </body>
 </html>
