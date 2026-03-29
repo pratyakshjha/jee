@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MindBoard — todoOS</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0d0f14;--surface:#161820;--border:#2a2d3a;--border2:#363a4a;
+  --accent:#4f8ef7;--text:#e4e6f0;--muted:#6e7290;
+  --glass:#ffffff0a;--glass-border:#ffffff14;
+  --yellow:#2a2408;--yellow-border:#f59e0b;--yellow-text:#fbbf24;
+  --blue:#0d1f3a;--blue-border:#3b82f6;--blue-text:#93c5fd;
+  --green:#0a1f14;--green-border:#10b981;--green-text:#6ee7b7;
+  --pink:#2a0d1a;--pink-border:#ec4899;--pink-text:#f9a8d4;
+  --purple:#1a0d2a;--purple-border:#8b5cf6;--purple-text:#c4b5fd;
+  --gray:#1a1c25;--gray-border:#6b7280;--gray-text:#d1d5db;
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);}
+
+/* Toolbar */
+.toolbar{
+  position:fixed;top:12px;left:50%;transform:translateX(-50%);
+  z-index:300;display:flex;align-items:center;gap:4px;
+  background:#13151cee;backdrop-filter:blur(24px);
+  border:0.5px solid var(--glass-border);border-radius:14px;
+  padding:6px 10px;box-shadow:0 8px 32px #00000060;
+}
+.tb-btn{
+  height:32px;padding:0 10px;border-radius:8px;border:none;
+  background:transparent;color:var(--text);font-size:12px;
+  cursor:pointer;display:flex;align-items:center;gap:6px;
+  transition:background 0.15s;white-space:nowrap;
+}
+.tb-btn:hover{background:#ffffff14;}
+.tb-btn.active{background:var(--accent);color:#fff;}
+.tb-btn svg{width:14px;height:14px;flex-shrink:0;}
+.tb-sep{width:0.5px;height:20px;background:var(--glass-border);margin:0 2px;}
+.tb-color{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.1s;}
+.tb-color:hover,.tb-color.sel{transform:scale(1.2);border-color:#fff;}
+.color-yellow{background:#f59e0b;}
+.color-blue{background:#3b82f6;}
+.color-green{background:#10b981;}
+.color-pink{background:#ec4899;}
+.color-purple{background:#8b5cf6;}
+.color-gray{background:#6b7280;}
+
+/* Canvas */
+#canvas-wrap{position:fixed;inset:0;overflow:hidden;cursor:default;}
+#canvas{position:absolute;top:0;left:0;width:100%;height:100%;transform-origin:0 0;}
+
+/* Grid bg */
+#canvas::before{
+  content:'';position:absolute;
+  width:4000px;height:4000px;top:-2000px;left:-2000px;
+  background-image:radial-gradient(circle,#ffffff10 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;
+}
+
+/* Nodes */
+.node{
+  position:absolute;min-width:140px;min-height:60px;
+  border-radius:12px;border:1.5px solid;
+  display:flex;flex-direction:column;
+  cursor:move;user-select:none;
+  transition:box-shadow 0.15s;
+}
+.node:hover,.node.selected{box-shadow:0 0 0 2px var(--accent);}
+.node.yellow{background:var(--yellow);border-color:var(--yellow-border);color:var(--yellow-text);}
+.node.blue{background:var(--blue);border-color:var(--blue-border);color:var(--blue-text);}
+.node.green{background:var(--green);border-color:var(--green-border);color:var(--green-text);}
+.node.pink{background:var(--pink);border-color:var(--pink-border);color:var(--pink-text);}
+.node.purple{background:var(--purple);border-color:var(--purple-border);color:var(--purple-text);}
+.node.gray{background:var(--gray);border-color:var(--gray-border);color:var(--gray-text);}
+
+.node-header{
+  padding:8px 10px 4px;display:flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;letter-spacing:0.5px;opacity:0.7;
+}
+.node-body{
+  flex:1;padding:4px 10px 10px;
+  font-size:13px;line-height:1.5;
+  outline:none;resize:none;background:transparent;border:none;
+  color:inherit;font-family:inherit;min-height:40px;
+  word-break:break-word;
+}
+.node-body[contenteditable="true"]{cursor:text;}
+
+/* Tile node extras */
+.node.tile .node-body{font-size:22px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;}
+
+/* Resize handle */
+.node-resize{
+  position:absolute;bottom:2px;right:4px;width:12px;height:12px;
+  cursor:se-resize;opacity:0.3;
+}
+.node-resize::after{content:'⌟';font-size:14px;line-height:1;}
+
+/* Delete btn */
+.node-del{
+  position:absolute;top:-8px;right:-8px;width:18px;height:18px;
+  border-radius:50%;background:#ff5f57;border:none;cursor:pointer;
+  font-size:10px;color:#fff;display:none;align-items:center;justify-content:center;
+  line-height:1;
+}
+.node:hover .node-del,.node.selected .node-del{display:flex;}
+
+/* SVG connector layer */
+#svg-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
+.connector{stroke:#4f8ef7;stroke-width:2;fill:none;stroke-dasharray:6 3;opacity:0.6;}
+.connector-hit{stroke:transparent;stroke-width:12;fill:none;cursor:pointer;pointer-events:all;}
+
+/* Context menu */
+.ctx{
+  position:fixed;z-index:500;background:#1a1c25ee;
+  backdrop-filter:blur(16px);border:0.5px solid var(--glass-border);
+  border-radius:10px;padding:4px;min-width:180px;
+  box-shadow:0 8px 32px #00000060;
+}
+.ctx.hidden{display:none;}
+.ctx-item{padding:7px 12px;font-size:12px;border-radius:6px;cursor:pointer;color:var(--text);transition:background 0.1s;display:flex;align-items:center;gap:8px;}
+.ctx-item:hover{background:#ffffff14;}
+.ctx-sep{height:0.5px;background:var(--glass-border);margin:3px 0;}
+.ctx-label{padding:4px 12px;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+/* Minimap */
+.minimap{
+  position:fixed;bottom:16px;right:16px;z-index:200;
+  width:140px;height:90px;background:#13151ccc;
+  border:0.5px solid var(--glass-border);border-radius:10px;
+  overflow:hidden;
+}
+.minimap-viewport{
+  position:absolute;border:1px solid var(--accent);
+  background:#4f8ef720;border-radius:2px;pointer-events:none;
+}
+
+/* Status bar */
+.statusbar{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  z-index:200;background:#13151ccc;backdrop-filter:blur(12px);
+  border:0.5px solid var(--glass-border);border-radius:8px;
+  padding:4px 12px;font-size:11px;color:var(--muted);
+  display:flex;align-items:center;gap:12px;
+}
+
+/* Connect mode cursor */
+body.connect-mode #canvas-wrap{cursor:crosshair;}
+body.connect-mode .node{cursor:crosshair;}
+
+/* Zoom controls */
+.zoom-ctrl{
+  position:fixed;bottom:16px;left:16px;z-index:200;
+  display:flex;flex-direction:column;gap:4px;
+}
+.z-btn{
+  width:32px;height:32px;border-radius:8px;border:0.5px solid var(--glass-border);
+  background:#13151ccc;color:var(--text);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background 0.15s;
+}
+.z-btn:hover{background:#ffffff14;}
+</style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar" id="toolbar">
+  <button class="tb-btn" onclick="addNode('sticky')" title="Sticky Note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+    Note
+  </button>
+  <button class="tb-btn" onclick="addNode('tile')" title="Tile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+    Tile
+  </button>
+  <button class="tb-btn" onclick="addNode('heading')" title="Heading">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h6"/></svg>
+    Heading
+  </button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" id="btn-connect" onclick="toggleConnect()" title="Connect nodes">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6a2 2 0 100-4 2 2 0 000 4zM6 22a2 2 0 100-4 2 2 0 000 4zM18 4L6 20"/></svg>
+    Connect
+  </button>
+  <div class="tb-sep"></div>
+  <div style="display:flex;gap:6px;align-items:center;">
+    <div class="tb-color color-yellow sel" id="col-yellow" onclick="setColor('yellow')" title="Yellow"></div>
+    <div class="tb-color color-blue" id="col-blue" onclick="setColor('blue')" title="Blue"></div>
+    <div class="tb-color color-green" id="col-green" onclick="setColor('green')" title="Green"></div>
+    <div class="tb-color color-pink" id="col-pink" onclick="setColor('pink')" title="Pink"></div>
+    <div class="tb-color color-purple" id="col-purple" onclick="setColor('purple')" title="Purple"></div>
+    <div class="tb-color color-gray" id="col-gray" onclick="setColor('gray')" title="Gray"></div>
+  </div>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="clearBoard()" title="Clear all">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+  </button>
+  <button class="tb-btn" onclick="saveBoard()" title="Save">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+  </button>
+</div>
+
+<!-- Canvas -->
+<div id="canvas-wrap">
+  <div id="canvas">
+    <svg id="svg-layer"></svg>
+  </div>
+</div>
+
+<!-- Context menu -->
+<div class="ctx hidden" id="ctx">
+  <div class="ctx-label">Add Node</div>
+  <div class="ctx-item" onclick="addNodeAt('sticky',ctxX,ctxY);hideCtx()">📝 Sticky Note</div>
+  <div class="ctx-item" onclick="addNodeAt('tile',ctxX,ctxY);hideCtx()">🟦 Tile</div>
+  <div class="ctx-item" onclick="addNodeAt('heading',ctxX,ctxY);hideCtx()">📌 Heading</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="resetView();hideCtx()">🏠 Reset View</div>
+  <div class="ctx-item" onclick="clearBoard();hideCtx()">🗑️ Clear Board</div>
+</div>
+
+<!-- Zoom controls -->
+<div class="zoom-ctrl">
+  <button class="z-btn" onclick="zoom(1.2)">+</button>
+  <button class="z-btn" onclick="resetView()" title="Reset">⌂</button>
+  <button class="z-btn" onclick="zoom(0.8)">−</button>
+</div>
+
+<!-- Status bar -->
+<div class="statusbar">
+  <span id="status-nodes">0 nodes</span>
+  <span>·</span>
+  <span id="status-zoom">100%</span>
+  <span>·</span>
+  <span style="color:#10b981;" id="status-save">saved</span>
+</div>
+
+<!-- Minimap -->
+<div class="minimap" id="minimap">
+  <canvas id="minimap-canvas" width="140" height="90"></canvas>
+  <div class="minimap-viewport" id="minimap-vp"></div>
+</div>
+
+<script>
+// State
+let nodes=[];
+let connections=[];
+let selectedColor='yellow';
+let connectMode=false;
+let connectFrom=null;
+let scale=1,panX=0,panY=0;
+let isPanning=false,panStart={x:0,y:0};
+let nodeIdCounter=0;
+let ctxX=0,ctxY=0;
+let selectedNode=null;
+let autosaveTimer=null;
+
+const canvas=document.getElementById('canvas');
+const wrap=document.getElementById('canvas-wrap');
+const svg=document.getElementById('svg-layer');
+
+// Color configs
+const colorIcons={sticky:'📝',tile:'🟦',heading:'📌'};
+const typeLabels={sticky:'NOTE',tile:'TILE',heading:'HEADING'};
+
+// Init
+loadBoard();
+updateTransform();
+renderConnectors();
+updateStatus();
+
+// Pan & zoom
+wrap.addEventListener('mousedown',e=>{
+  if(e.target!==wrap&&e.target!==canvas&&!e.target.closest('#svg-layer'))return;
+  if(connectMode)return;
+  isPanning=true;
+  panStart={x:e.clientX-panX,y:e.clientY-panY};
+  wrap.style.cursor='grabbing';
+});
+window.addEventListener('mousemove',e=>{
+  if(!isPanning)return;
+  panX=e.clientX-panStart.x;
+  panY=e.clientY-panStart.y;
+  updateTransform();
+  updateMinimap();
+});
+window.addEventListener('mouseup',()=>{isPanning=false;wrap.style.cursor='default';});
+
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const delta=e.deltaY>0?0.9:1.1;
+  const rect=wrap.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  panX=mx-(mx-panX)*delta;
+  panY=my-(my-panY)*delta;
+  scale=Math.min(Math.max(scale*delta,0.2),3);
+  updateTransform();
+  updateMinimap();
+},{passive:false});
+
+function updateTransform(){
+  canvas.style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;
+  document.getElementById('status-zoom').textContent=Math.round(scale*100)+'%';
+}
+
+function zoom(factor){
+  scale=Math.min(Math.max(scale*factor,0.2),3);
+  updateTransform();updateMinimap();
+}
+function resetView(){scale=1;panX=0;panY=0;updateTransform();updateMinimap();}
+
+// Context menu
+wrap.addEventListener('contextmenu',e=>{
+  if(e.target.closest('.node'))return;
+  e.preventDefault();
+  const rect=wrap.getBoundingClientRect();
+  ctxX=(e.clientX-rect.left-panX)/scale;
+  ctxY=(e.clientY-rect.top-panY)/scale;
+  showCtx(e.clientX,e.clientY);
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.ctx'))hideCtx();});
+function showCtx(x,y){
+  const m=document.getElementById('ctx');
+  m.classList.remove('hidden');
+  m.style.left=Math.min(x,window.innerWidth-200)+'px';
+  m.style.top=Math.min(y,window.innerHeight-200)+'px';
+}
+function hideCtx(){document.getElementById('ctx').classList.add('hidden');}
+
+// Add node (center of viewport)
+function addNode(type){
+  const rect=wrap.getBoundingClientRect();
+  const cx=(rect.width/2-panX)/scale;
+  const cy=(rect.height/2-panY)/scale;
+  addNodeAt(type,cx-80,cy-40);
+}
+
+function addNodeAt(type,x,y){
+  const id='n'+(++nodeIdCounter);
+  const node={id,type,x,y,color:selectedColor,
+    w:type==='tile'?120:180,
+    h:type==='tile'?80:type==='heading'?60:100,
+    text:type==='tile'?'Title':type==='heading'?'Heading':'Write something...'
+  };
+  nodes.push(node);
+  renderNode(node);
+  updateStatus();
+  scheduleSave();
+}
+
+function renderNode(node){
+  const el=document.createElement('div');
+  el.className=`node ${node.color}`;
+  el.id=node.id;
+  el.style.left=node.x+'px';
+  el.style.top=node.y+'px';
+  el.style.width=node.w+'px';
+  el.style.height=node.h+'px';
+
+  const header=document.createElement('div');
+  header.className='node-header';
+  header.textContent=typeLabels[node.type]||'NOTE';
+
+  const body=document.createElement('div');
+  body.className='node-body';
+  if(node.type==='tile')body.style.cssText='font-size:18px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;';
+  body.contentEditable='true';
+  body.textContent=node.text;
+  body.spellcheck=false;
+  body.addEventListener('input',()=>{node.text=body.textContent;scheduleSave();});
+  body.addEventListener('mousedown',e=>e.stopPropagation());
+  body.addEventListener('dblclick',e=>e.stopPropagation());
+
+  const delBtn=document.createElement('button');
+  delBtn.className='node-del';
+  delBtn.textContent='×';
+  delBtn.addEventListener('click',e=>{e.stopPropagation();deleteNode(node.id);});
+
+  const resizeH=document.createElement('div');
+  resizeH.className='node-resize';
+  resizeH.addEventListener('mousedown',e=>startResize(e,node,el));
+
+  el.appendChild(header);
+  el.appendChild(body);
+  el.appendChild(delBtn);
+  el.appendChild(resizeH);
+
+  // Drag
+  el.addEventListener('mousedown',e=>{
+    if(e.target===body||e.target===delBtn||e.target===resizeH)return;
+    if(connectMode){startConnect(node.id);return;}
+    e.stopPropagation();
+    selectNode(node.id);
+    const sx=e.clientX/scale-node.x,sy=e.clientY/scale-node.y;
+    function move(e){
+      node.x=e.clientX/scale-sx;
+      node.y=e.clientY/scale-sy;
+      el.style.left=node.x+'px';
+      el.style.top=node.y+'px';
+      renderConnectors();
+      updateMinimap();
+    }
+    function up(){
+      document.removeEventListener('mousemove',move);
+      document.removeEventListener('mouseup',up);
+      scheduleSave();
+    }
+    document.addEventListener('mousemove',move);
+    document.addEventListener('mouseup',up);
+  });
+
+  // Right click on node
+  el.addEventListener('contextmenu',e=>{
+    e.preventDefault();e.stopPropagation();
+    showNodeCtx(e.clientX,e.clientY,node.id);
+  });
+
+  canvas.appendChild(el);
+  updateMinimap();
+}
+
+function selectNode(id){
+  document.querySelectorAll('.node').forEach(n=>n.classList.remove('selected'));
+  document.getElementById(id)?.classList.add('selected');
+  selectedNode=id;
+}
+
+function deleteNode(id){
+  nodes=nodes.filter(n=>n.id!==id);
+  connections=connections.filter(c=>c.from!==id&&c.to!==id);
+  document.getElementById(id)?.remove();
+  renderConnectors();
+  updateStatus();
+  scheduleSave();
+}
+
+function startResize(e,node,el){
+  e.stopPropagation();e.preventDefault();
+  const sx=e.clientX,sy=e.clientY,sw=node.w,sh=node.h;
+  function move(e){
+    node.w=Math.max(100,(sw+(e.clientX-sx)/scale));
+    node.h=Math.max(60,(sh+(e.clientY-sy)/scale));
+    el.style.width=node.w+'px';
+    el.style.height=node.h+'px';
+    renderConnectors();
+  }
+  function up(){document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);scheduleSave();}
+  document.addEventListener('mousemove',move);
+  document.addEventListener('mouseup',up);
+}
+
+// Node context menu
+let nodeCtxId=null;
+function showNodeCtx(x,y,id){
+  nodeCtxId=id;
+  const node=nodes.find(n=>n.id===id);
+  if(!node)return;
+  const m=document.getElementById('ctx');
+  m.innerHTML=`
+    <div class="ctx-label">Node</div>
+    <div class="ctx-item" onclick="changeColor(nodeCtxId,'yellow');hideCtx()">🟡 Yellow</div>
+    <div class="ctx-item" onclick="changeColor(nodeCtxId,'blue');hideCtx()">🔵 Blue</div>
+    <div class="ctx-item" onclick="changeColor(nodeCtxId,'green');hideCtx()">🟢 Green</div>
+    <div class="ctx-item" onclick="changeColor(nodeCtxId,'pink');hideCtx()">🩷 Pink</div>
+    <div class="ctx-item" onclick="changeColor(nodeCtxId,'purple');hideCtx()">🟣 Purple</div>
+    <div class="ctx-item" onclick="changeColor(nodeCtxId,'gray');hideCtx()">⬜ Gray</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="deleteNode(nodeCtxId);hideCtx();restoreCtx()">🗑️ Delete</div>
+  `;
+  m.classList.remove('hidden');
+  m.style.left=Math.min(x,window.innerWidth-200)+'px';
+  m.style.top=Math.min(y,window.innerHeight-200)+'px';
+}
+
+function restoreCtx(){
+  const m=document.getElementById('ctx');
+  m.innerHTML=`
+    <div class="ctx-label">Add Node</div>
+    <div class="ctx-item" onclick="addNodeAt('sticky',ctxX,ctxY);hideCtx()">📝 Sticky Note</div>
+    <div class="ctx-item" onclick="addNodeAt('tile',ctxX,ctxY);hideCtx()">🟦 Tile</div>
+    <div class="ctx-item" onclick="addNodeAt('heading',ctxX,ctxY);hideCtx()">📌 Heading</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="resetView();hideCtx()">🏠 Reset View</div>
+    <div class="ctx-item" onclick="clearBoard();hideCtx()">🗑️ Clear Board</div>
+  `;
+}
+
+function changeColor(id,color){
+  const node=nodes.find(n=>n.id===id);
+  const el=document.getElementById(id);
+  if(!node||!el)return;
+  const old=node.color;
+  node.color=color;
+  el.classList.remove(old);
+  el.classList.add(color);
+  scheduleSave();
+}
+
+// Connect mode
+function toggleConnect(){
+  connectMode=!connectMode;
+  connectFrom=null;
+  document.getElementById('btn-connect').classList.toggle('active',connectMode);
+  document.body.classList.toggle('connect-mode',connectMode);
+}
+
+function startConnect(id){
+  if(!connectFrom){
+    connectFrom=id;
+    document.getElementById(id)?.classList.add('selected');
+  } else {
+    if(connectFrom!==id){
+      const exists=connections.find(c=>(c.from===connectFrom&&c.to===id)||(c.from===id&&c.to===connectFrom));
+      if(!exists){connections.push({from:connectFrom,to:id});renderConnectors();scheduleSave();}
+    }
+    document.getElementById(connectFrom)?.classList.remove('selected');
+    connectFrom=null;
+    toggleConnect();
+  }
+}
+
+function getNodeCenter(id){
+  const node=nodes.find(n=>n.id===id);
+  if(!node)return{x:0,y:0};
+  return{x:node.x+node.w/2,y:node.y+node.h/2};
+}
+
+function renderConnectors(){
+  svg.innerHTML='';
+  connections.forEach((c,i)=>{
+    const a=getNodeCenter(c.from),b=getNodeCenter(c.to);
+    if(!a||!b)return;
+    const dx=b.x-a.x,dy=b.y-a.y;
+    const cx1=a.x+dx*0.4,cy1=a.y,cx2=b.x-dx*0.4,cy2=b.y;
+    const d=`M${a.x},${a.y} C${cx1},${cy1} ${cx2},${cy2} ${b.x},${b.y}`;
+
+    const hit=document.createElementNS('http://www.w3.org/2000/svg','path');
+    hit.setAttribute('d',d);hit.setAttribute('class','connector-hit');
+    hit.addEventListener('click',()=>{connections.splice(i,1);renderConnectors();scheduleSave();});
+
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',d);path.setAttribute('class','connector');
+
+    // Arrow head
+    const angle=Math.atan2(b.y-cy2,b.x-cx2);
+    const al=10,aw=6;
+    const p1x=b.x-al*Math.cos(angle)+aw*Math.sin(angle);
+    const p1y=b.y-al*Math.sin(angle)-aw*Math.cos(angle);
+    const p2x=b.x-al*Math.cos(angle)-aw*Math.sin(angle);
+    const p2y=b.y-al*Math.sin(angle)+aw*Math.cos(angle);
+    const arrow=document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    arrow.setAttribute('points',`${b.x},${b.y} ${p1x},${p1y} ${p2x},${p2y}`);
+    arrow.setAttribute('fill','#4f8ef7');arrow.setAttribute('opacity','0.7');
+
+    svg.appendChild(hit);svg.appendChild(path);svg.appendChild(arrow);
+  });
+}
+
+// Color picker
+function setColor(c){
+  selectedColor=c;
+  document.querySelectorAll('.tb-color').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('col-'+c)?.classList.add('sel');
+}
+
+// Save/load
+function saveBoard(){
+  const data={nodes,connections,nodeIdCounter};
+  localStorage.setItem('todoOS_mindboard',JSON.stringify(data));
+  document.getElementById('status-save').textContent='saved ✓';
+  setTimeout(()=>document.getElementById('status-save').textContent='saved',2000);
+}
+function scheduleSave(){
+  clearTimeout(autosaveTimer);
+  document.getElementById('status-save').textContent='saving...';
+  autosaveTimer=setTimeout(saveBoard,800);
+}
+function loadBoard(){
+  try{
+    const raw=localStorage.getItem('todoOS_mindboard');
+    if(!raw)return;
+    const data=JSON.parse(raw);
+    nodes=data.nodes||[];
+    connections=data.connections||[];
+    nodeIdCounter=data.nodeIdCounter||0;
+    nodes.forEach(n=>renderNode(n));
+  }catch(e){console.warn('Load failed',e);}
+}
+function clearBoard(){
+  if(!confirm('Clear the entire board?'))return;
+  nodes=[];connections=[];
+  document.querySelectorAll('.node').forEach(n=>n.remove());
+  renderConnectors();
+  updateStatus();
+  scheduleSave();
+}
+
+// Status
+function updateStatus(){
+  document.getElementById('status-nodes').textContent=nodes.length+' node'+(nodes.length!==1?'s':'');
+}
+
+// Minimap
+function updateMinimap(){
+  const mc=document.getElementById('minimap-canvas');
+  const ctx2=mc.getContext('2d');
+  ctx2.clearRect(0,0,140,90);
+  if(!nodes.length)return;
+  const xs=nodes.map(n=>n.x),ys=nodes.map(n=>n.y);
+  const minX=Math.min(...xs)-20,minY=Math.min(...ys)-20;
+  const maxX=Math.max(...nodes.map(n=>n.x+n.w))+20;
+  const maxY=Math.max(...nodes.map(n=>n.y+n.h))+20;
+  const bw=maxX-minX,bh=maxY-minY;
+  const sc=Math.min(140/bw,90/bh,1);
+  const colorMap={yellow:'#f59e0b',blue:'#3b82f6',green:'#10b981',pink:'#ec4899',purple:'#8b5cf6',gray:'#6b7280'};
+  nodes.forEach(n=>{
+    ctx2.fillStyle=colorMap[n.color]||'#888';
+    ctx2.globalAlpha=0.7;
+    ctx2.fillRect((n.x-minX)*sc,(n.y-minY)*sc,Math.max(n.w*sc,4),Math.max(n.h*sc,3));
+  });
+  ctx2.globalAlpha=1;
+  // Viewport indicator
+  const vp=document.getElementById('minimap-vp');
+  const vpW=(window.innerWidth/scale)*sc,vpH=(window.innerHeight/scale)*sc;
+  const vpX=(-panX/scale-minX)*sc,vpY=(-panY/scale-minY)*sc;
+  vp.style.width=Math.min(vpW,140)+'px';
+  vp.style.height=Math.min(vpH,90)+'px';
+  vp.style.left=Math.max(0,vpX)+'px';
+  vp.style.top=Math.max(0,vpY)+'px';
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){if(connectMode)toggleConnect();selectNode(null);}
+  if(e.key==='Delete'&&selectedNode&&document.activeElement.tagName!=='DIV'){deleteNode(selectedNode);selectedNode=null;}
+  if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();saveBoard();}
+});
+
+updateMinimap();
+</script>
+</body>
+</html>
