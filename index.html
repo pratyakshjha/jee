@@ -8,16 +8,14 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html,body{
-  width:100%;height:100%;
+  width:100%;min-height:100vh;
   background:#060608;
   color:#e8e8e0;
   font-family:'DM Mono',monospace;
-  overflow:hidden;
   display:flex;flex-direction:column;
   align-items:center;justify-content:center;
 }
 
-/* Subtle noise bg */
 body::before{
   content:'';position:fixed;inset:0;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
@@ -25,28 +23,18 @@ body::before{
   pointer-events:none;z-index:0;opacity:0.6;
 }
 
-/* Faint horizontal line across middle */
-body::after{
-  content:'';position:fixed;
-  left:0;right:0;top:50%;height:1px;
-  background:linear-gradient(90deg,transparent,#ffffff08,transparent);
-  pointer-events:none;z-index:0;
-}
-
 .wrap{
   position:relative;z-index:1;
   width:100%;max-width:900px;
-  padding:0 32px;
+  padding:0 32px 80px;
   display:flex;flex-direction:column;
-  align-items:center;gap:0;
+  align-items:center;
 }
 
-/* Two countdowns side by side */
 .countdowns{
   display:grid;
   grid-template-columns:1fr 1px 1fr;
   width:100%;
-  gap:0;
   animation:fadeIn 1.2s ease both;
 }
 
@@ -62,7 +50,6 @@ body::after{
 }
 
 .exam-label{
-  font-family:'DM Mono',monospace;
   font-size:10px;
   font-weight:300;
   letter-spacing:5px;
@@ -124,11 +111,9 @@ body::after{
   line-height:1;
 }
 
-/* Urgency tint when < 30 days */
 .countdown.urgent .seg-num{color:#c0392b;}
 .countdown.urgent .exam-name{color:#e87070;}
 
-/* Progress bar */
 .progress-wrap{
   width:100%;height:1px;
   background:#1a1a1a;
@@ -143,11 +128,10 @@ body::after{
   transition:width 1s linear;
 }
 
-/* Bottom button */
 .btn-wrap{
   position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
   z-index:10;
-  animation:fadeIn 1.5s 0.4s ease both;opacity:0;
+  animation:fadeInBtn 1.5s 0.4s ease both;opacity:0;
 }
 .tracker-btn{
   background:transparent;
@@ -170,17 +154,14 @@ body::after{
   from{opacity:0;transform:translateY(10px);}
   to{opacity:1;transform:translateY(0);}
 }
-
-/* Fix btn-wrap fadeIn not resetting transform */
-.btn-wrap{animation:fadeInBtn 1.5s 0.4s ease both;}
 @keyframes fadeInBtn{
   from{opacity:0;}
   to{opacity:1;}
 }
 
 @media(max-width:600px){
-  .countdowns{grid-template-columns:1fr;grid-template-rows:1fr 1px 1fr;}
-  .divider-v{width:auto;height:1px;background:linear-gradient(90deg,transparent,#ffffff18,transparent);}
+  .countdowns{grid-template-columns:1fr;grid-template-rows:auto 1px auto;}
+  .divider-v{width:100%;height:1px;background:linear-gradient(90deg,transparent,#ffffff18,transparent);}
   .countdown{padding:28px 24px;}
   .seg-num{font-size:3.5rem;}
 }
@@ -191,62 +172,36 @@ body::after{
 <div class="wrap">
   <div class="countdowns">
 
-    <!-- JEE Mains -->
     <div class="countdown" id="cd-mains">
       <div class="exam-label">Countdown to</div>
       <div class="exam-name">JEE Mains</div>
       <div class="exam-date">21 · 01 · 2027</div>
       <div class="segments">
-        <div class="seg">
-          <div class="seg-num" id="m-days">000</div>
-          <div class="seg-unit">Days</div>
-        </div>
+        <div class="seg"><div class="seg-num" id="m-days">000</div><div class="seg-unit">Days</div></div>
         <div class="seg-sep">:</div>
-        <div class="seg">
-          <div class="seg-num" id="m-hrs">00</div>
-          <div class="seg-unit">Hours</div>
-        </div>
+        <div class="seg"><div class="seg-num" id="m-hrs">00</div><div class="seg-unit">Hours</div></div>
         <div class="seg-sep">:</div>
-        <div class="seg">
-          <div class="seg-num" id="m-min">00</div>
-          <div class="seg-unit">Mins</div>
-        </div>
+        <div class="seg"><div class="seg-num" id="m-min">00</div><div class="seg-unit">Mins</div></div>
         <div class="seg-sep">:</div>
-        <div class="seg">
-          <div class="seg-num" id="m-sec">00</div>
-          <div class="seg-unit">Secs</div>
-        </div>
+        <div class="seg"><div class="seg-num" id="m-sec">00</div><div class="seg-unit">Secs</div></div>
       </div>
       <div class="progress-wrap"><div class="progress-bar" id="m-prog"></div></div>
     </div>
 
     <div class="divider-v"></div>
 
-    <!-- JEE Advanced -->
     <div class="countdown" id="cd-adv">
       <div class="exam-label">Countdown to</div>
       <div class="exam-name">JEE Advanced</div>
       <div class="exam-date">10 · 05 · 2027</div>
       <div class="segments">
-        <div class="seg">
-          <div class="seg-num" id="a-days">000</div>
-          <div class="seg-unit">Days</div>
-        </div>
+        <div class="seg"><div class="seg-num" id="a-days">000</div><div class="seg-unit">Days</div></div>
         <div class="seg-sep">:</div>
-        <div class="seg">
-          <div class="seg-num" id="a-hrs">00</div>
-          <div class="seg-unit">Hours</div>
-        </div>
+        <div class="seg"><div class="seg-num" id="a-hrs">00</div><div class="seg-unit">Hours</div></div>
         <div class="seg-sep">:</div>
-        <div class="seg">
-          <div class="seg-num" id="a-min">00</div>
-          <div class="seg-unit">Mins</div>
-        </div>
+        <div class="seg"><div class="seg-num" id="a-min">00</div><div class="seg-unit">Mins</div></div>
         <div class="seg-sep">:</div>
-        <div class="seg">
-          <div class="seg-num" id="a-sec">00</div>
-          <div class="seg-unit">Secs</div>
-        </div>
+        <div class="seg"><div class="seg-num" id="a-sec">00</div><div class="seg-unit">Secs</div></div>
       </div>
       <div class="progress-wrap"><div class="progress-bar" id="a-prog"></div></div>
     </div>
@@ -254,12 +209,10 @@ body::after{
   </div>
 </div>
 
-<!-- JEE Tracker button -->
 <div class="btn-wrap">
   <a href="jee-tracker.html" class="tracker-btn">score tracker →</a>
 </div>
 
-<!-- FreeDNS (hidden, required) -->
 <div style="display:none;">
 <!-- begin freedns banner code -->
 <center><form target=_new action=https://freedns.afraid.org/subdomain/edit.php><table style="border-style=solid;border-width=1;border-color=black;" width=468 height=60 bgcolor=cccccc><tr><td align=middle><table border=0 cellpadding=2 cellspacing=0><tr><td align=middle colspan=3><div style="font-family: Verdana, Helvetica;font-size: 13px;color: black;hover: orange;"><a style="font-family: Verdana, Helvetica;font-size: 13px;color: black;hover: orange;" target=_new href=https://freedns.afraid.org/>Free DNS</a> provides easy shared DNS hosting &amp; URL forwarding</div></td></tr><tr><td align=middle valign=middle><input type=text size=15 name=subdomain value=yourname></td><td align=middle valign=middle><select name=edit_domain_id><option value=2>strangled.net<option value=29>mooo.com<option style="color:red;font-weight:bold;" value=0>Many more available...</select></td><td align=middle valign=middle><input type=submit name=submit value="next &gt;&gt;"></td></tr></table></td></tr></table><input type=hidden name=web_panel value=1><input type=hidden name=ref value=4108873></form></center>
@@ -267,10 +220,9 @@ body::after{
 </div>
 
 <script>
-const MAINS  = new Date('2027-01-21T00:00:00');
-const ADV    = new Date('2027-05-10T00:00:00');
-// Approx start date for progress bars (JEE 2026 results ~June 2026)
-const START  = new Date('2026-06-01T00:00:00');
+const MAINS = new Date('2027-01-21T00:00:00');
+const ADV   = new Date('2027-05-10T00:00:00');
+const START = new Date('2026-06-01T00:00:00');
 
 function pad(n,len=2){return String(Math.max(0,n)).padStart(len,'0');}
 
@@ -278,10 +230,7 @@ function update(target,daysId,hrsId,minId,secId,progId,wrapId){
   const now=new Date();
   const diff=target-now;
   if(diff<=0){
-    document.getElementById(daysId).textContent='000';
-    document.getElementById(hrsId).textContent='00';
-    document.getElementById(minId).textContent='00';
-    document.getElementById(secId).textContent='00';
+    [daysId,hrsId,minId,secId].forEach(id=>document.getElementById(id).textContent='00');
     document.getElementById(progId).style.width='100%';
     return;
   }
@@ -299,13 +248,9 @@ function update(target,daysId,hrsId,minId,secId,progId,wrapId){
   document.getElementById(hrsId).textContent=pad(hrs);
   document.getElementById(minId).textContent=pad(mins);
 
-  // Progress bar: % of time elapsed from START to target
-  const total=target-START;
-  const elapsed=now-START;
-  const pct=Math.min(100,Math.max(0,(elapsed/total)*100));
+  const pct=Math.min(100,Math.max(0,((now-START)/(target-START))*100));
   document.getElementById(progId).style.width=pct+'%';
 
-  // Urgency
   if(days<30)document.getElementById(wrapId).classList.add('urgent');
   else document.getElementById(wrapId).classList.remove('urgent');
 }
