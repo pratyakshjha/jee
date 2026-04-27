@@ -267,7 +267,16 @@
   },
   "12": {
     "mains": {
-      "minor": [],
+      "minor": [
+        {
+          "label": "1",
+          "total": 207,
+          "phy": 71,
+          "chem": 77,
+          "maths": 59,
+          "date": "27/4/2026"
+        }
+      ],
       "major": [],
       "review": []
     },
