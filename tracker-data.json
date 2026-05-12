@@ -281,7 +281,16 @@
       "review": []
     },
     "adv": {
-      "minor": [],
+      "minor": [
+        {
+          "label": "2",
+          "total": 100,
+          "phy": 35,
+          "chem": 39,
+          "maths": 25,
+          "date": "12/5/2026"
+        }
+      ],
       "major": [],
       "review": []
     }
