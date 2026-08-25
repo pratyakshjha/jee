@@ -315,6 +315,14 @@
           "chem": 71,
           "maths": 75,
           "date": "17/8/2026"
+        },
+        {
+          "label": "Major - 2",
+          "total": 173,
+          "phy": 62,
+          "chem": 73,
+          "maths": 38,
+          "date": "25/8/2026"
         }
       ],
       "major": [],
