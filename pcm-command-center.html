@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PCM Command Center</title>
+<style>
+:root{--bg:#090b0f;--card:#11151c;--c2:#171c26;--bd:#232b37;--tx:#e8eef5;--mut:#7f8b9b;--ac:#4cc9f0;--ok:#3ddc97;--warn:#f5b942;--bad:#ff5d6c;--mono:ui-monospace,"Cascadia Mono",Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1100px 450px at 85% -10%,#12304a55,transparent),var(--bg);color:var(--tx);font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif;padding-bottom:76px}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:var(--c2);border:1px solid var(--bd);border-radius:8px;padding:8px 12px;transition:.15s}
+button:hover{border-color:var(--ac)}button:disabled{opacity:.35;cursor:default}
+input,select{background:#0c1016;border:1px solid var(--bd);border-radius:8px;padding:8px;min-width:0}
+input:focus,select:focus{outline:1px solid var(--ac)}
+input[type=number]{width:74px;font-family:var(--mono);text-align:center}
+header{position:sticky;top:0;z-index:5;display:flex;gap:10px;align-items:center;padding:10px 16px;background:#090b0f;border-bottom:1px solid var(--bd)}
+.brand{font-family:var(--mono);font-weight:700;letter-spacing:.08em;color:var(--ac);white-space:nowrap}
+nav{display:flex;gap:4px;flex:1}
+nav button{border:0;background:none;color:var(--mut);padding:8px 12px}
+nav button.on{color:var(--tx);background:var(--c2);box-shadow:inset 0 -2px var(--ac)}
+#q{flex:0 1 220px}
+main{max-width:1180px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(3,1fr)}.grid .card{margin:0}
+h2{margin:18px 0 10px;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+h3,h4{margin:0}
+.mut{color:var(--mut)}.mono{font-family:var(--mono)}.big{font:700 30px var(--mono)}
+.lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.bar{display:block;height:6px;background:#0c1016;border-radius:9px;overflow:hidden;margin-top:6px}
+.bar u{display:block;height:100%;background:var(--sc,var(--ac));border-radius:9px;transition:width .4s}
+.bar.ok u{background:var(--ok)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;font:700 11px var(--mono);letter-spacing:.08em;border:1px solid currentColor}
+.p-done,.AHEAD{color:var(--ok)}.p-partial,.TRACK{color:var(--warn)}.p-missed,.BEHIND{color:var(--bad)}.p-notstarted,.p-future,.p-empty{color:var(--mut)}
+.ring{display:flex;gap:14px;align-items:center}.ring svg{width:104px;height:104px;flex:none}
+.rb{fill:none;stroke:#0c1016;stroke-width:10}.rf{fill:none;stroke:var(--ac);stroke-width:10;stroke-linecap:round;transition:.5s}.ring.ok .rf{stroke:var(--ok)}
+.ring text{fill:var(--tx);font:700 22px var(--mono);text-anchor:middle}
+.banner{margin-top:10px;padding:8px 12px;border-radius:8px;font:700 12px var(--mono);letter-spacing:.1em;border:1px solid}
+.banner.ok{color:var(--ok);background:#3ddc9712}.banner.no{color:var(--warn);background:#f5b94212}.banner.bad{color:var(--bad);background:#ff5d6c12}
+.srow{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:13px}
+.dh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.strip div{background:#0c1016;border-radius:10px;padding:8px 10px}.strip b{display:block;font:700 18px var(--mono)}
+.sb{border-left:3px solid var(--sc);padding-left:12px;margin:14px 0}.sb h4{display:flex;justify-content:space-between;color:var(--sc)}
+.task{display:grid;grid-template-columns:1fr auto auto;gap:6px 12px;align-items:center;padding:10px;margin-top:8px;background:#0c1016;border-radius:10px;border:1px solid transparent}
+.task.ok{border-color:#3ddc9755}.task .tn small{display:block;color:var(--mut);font-family:var(--mono)}
+.tc{display:flex;gap:8px}.tc label{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;display:grid;gap:2px}
+.tb{display:flex;gap:4px}.tb button{padding:8px 10px;min-width:40px;font-family:var(--mono)}.tb .ck{color:var(--ok)}
+.task .bar{grid-column:1/-1;margin:0}
+table{width:100%;border-collapse:collapse}th,td{padding:9px 8px;text-align:right;border-bottom:1px solid var(--bd)}th:first-child,td:first-child{text-align:left}
+th{font-size:11px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase}tr[data-act]{cursor:pointer}tr[data-act]:hover,tr.td{background:#4cc9f014}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}.stats div{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px}.stats b{display:block;font:700 22px var(--mono)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.mon{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.dow{font-size:10px;text-align:center;color:var(--mut)}
+.cell{--c:#2b3544;padding:6px;min-height:76px;text-align:left;display:flex;flex-direction:column;gap:1px;background:color-mix(in srgb,var(--c) calc(12% + var(--i)*40%),var(--card));border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}
+.cell b{font-size:12px}.cell span{font:700 14px var(--mono)}.cell em{font:normal 10px var(--mono);color:var(--mut)}
+.cell.st-done{--c:var(--ok)}.cell.st-partial{--c:var(--warn)}.cell.st-missed{--c:var(--bad)}.cell.st-notstarted{--c:#8795a8}.cell.st-future{--c:#2b6a85}
+.cell.sun b{color:var(--ac);text-decoration:underline}.cell.today{outline:2px solid var(--ac)}.cell.dim{opacity:.18}.blank{min-height:1px}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mut)}.leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+.ch{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}.cg .card{margin:0;border-top:3px solid var(--sc)}
+.badge{font:700 10px var(--mono);letter-spacing:.08em;padding:2px 8px;border-radius:99px;border:1px solid}
+.mrow{display:grid;grid-template-columns:2fr 1.2fr 90px 1.4fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)}.mrow input[type=text]{width:100%}.mrow input[type=number]{width:100%}
+.chip{display:inline-block;margin:3px 3px 0 0;padding:4px 8px;font-size:12px}
+pre{white-space:pre-wrap;background:#0c1016;border:1px solid var(--bd);border-radius:10px;padding:12px;font:12px/1.5 var(--mono);max-height:420px;overflow:auto}
+.danger{border-color:#ff5d6c66;color:var(--bad)}.pri{background:var(--ac);color:#04121a;border-color:var(--ac);font-weight:700}
+.ov{position:fixed;inset:0;background:#000b;z-index:20;display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:16px}.mdl{width:min(760px,100%)}.mdl .card{margin:0}
+#toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:var(--ok);color:#04140c;padding:8px 16px;border-radius:99px;font-weight:700;opacity:0;pointer-events:none;transition:.3s;z-index:30}#toast.on{opacity:1}
+.notice{background:#f5b94215;border:1px solid var(--warn);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;gap:10px}
+body.focus .hide-f{display:none}
+@media(max-width:760px){
+ .grid{grid-template-columns:1fr}.strip{grid-template-columns:repeat(2,1fr)}
+ header{flex-wrap:wrap}.brand{flex:1}#q{flex:1 1 100%;order:3}
+ nav{position:fixed;bottom:0;left:0;right:0;background:#0b0e13;border-top:1px solid var(--bd);padding:6px;z-index:9;justify-content:space-around}nav button{padding:10px 6px;font-size:12px;flex:1}
+ .task{grid-template-columns:1fr}.tb button{flex:1;min-height:42px}.tc{flex-wrap:wrap}.tc input{width:92px}
+ .mrow{grid-template-columns:1fr 1fr}.cell{min-height:50px;padding:3px}.cell em{display:none}.cell span{font-size:11px}.mon{gap:3px}
+ main{padding:10px}.big{font-size:26px}
+}
+</style></head><body>
+<header><div class="brand">PCM//COMMAND</div>
+<nav id="nav"><button data-v="today">Today</button><button data-v="calendar">Calendar</button><button data-v="chapters">Chapters</button><button data-v="manage">Manage</button><button data-v="agent">AI Agent</button></nav>
+<input id="q" placeholder="Search chapter or date…  ( / )" autocomplete="off">
+<button id="undo" data-act="undo" title="Undo last edit (Z)">↶</button><button data-act="jump" title="Jump to today (T)">Today</button><button data-act="focus" title="Focus mode">◎</button></header>
+<main id="app"></main><div id="modal"></div><div id="toast"></div>
+<script>
+// ================================
+// SCHEDULE DATA  — the ONLY block an AI agent needs to replace.
+// Bump metadata.version whenever you replace it: the app then loads the new
+// schedule/chapters automatically while KEEPING your completion + missed-day progress.
+// ================================
+const INITIAL_DATA = {
+  metadata: { version: "2026-10-03-v1", startDate: "2026-10-04", endDate: "2026-12-31" },
+  subjects: { maths: "Mathematics", physics: "Physics", chemistry: "Chemistry" },
+  // Chapter totals. Physics is PENDING (empty) until real counts are supplied.
+  chapters: {
+  maths: [
+    {"name":"Sets","total":31},
+    {"name":"Relations & Functions","total":186},
+    {"name":"Complex Numbers & Quadratic Equations","total":304},
+    {"name":"Matrices","total":87},
+    {"name":"Determinants","total":212},
+    {"name":"P&C","total":199},
+    {"name":"Binomial Theorem","total":176},
+    {"name":"Sequences & Series","total":261},
+    {"name":"Straight Lines","total":153},
+    {"name":"Conic Sections","total":278},
+    {"name":"Limits and Derivatives","total":104},
+    {"name":"Continuity & Differentiability","total":206},
+    {"name":"AOD","total":163},
+    {"name":"Integrals","total":359},
+    {"name":"Area Under Curves","total":162},
+    {"name":"Differential Equations","total":198},
+    {"name":"Vector Algebra","total":229},
+    {"name":"3D Geometry","total":139},
+    {"name":"Statistics","total":136},
+    {"name":"Probability","total":207},
+    {"name":"Trigonometric Functions & Identities","total":107},
+    {"name":"Inverse Trigonometric Functions","total":99}
+  ],
+  physics: [],
+  chemistry: [
+    {"name":"Mole Concept","total":179},
+    {"name":"Atomic Structure","total":194},
+    {"name":"Chemical Bonding","total":232},
+    {"name":"Chemical Thermodynamics","total":199},
+    {"name":"Solutions","total":221},
+    {"name":"Equilibrium","total":256},
+    {"name":"Redox Reactions","total":48},
+    {"name":"Electrochemistry","total":198},
+    {"name":"Chemical Kinetics","total":201},
+    {"name":"Classification & Periodicity","total":140},
+    {"name":"p-Block Group 13 & 14","total":53},
+    {"name":"p-Block Group 15–18","total":87},
+    {"name":"d- and f-Block","total":215},
+    {"name":"Coordination Compounds","total":317},
+    {"name":"GOC","total":248},
+    {"name":"Hydrocarbons","total":204},
+    {"name":"Haloalkanes & Haloarenes","total":174},
+    {"name":"Alcohols, Phenols & Ethers","total":171},
+    {"name":"Aldehydes, Ketones & Carboxylic Acids","total":271},
+    {"name":"Amines","total":198},
+    {"name":"Biomolecules","total":164},
+    {"name":"Practical Chemistry","total":176}
+  ]},
+  // One entry per date. Each item: { chapter, questions }. physics: [] = pending.
+  schedule: {
+    "2026-10-04": {"maths":[{"chapter":"Conic Sections","questions":45},{"chapter":"Area Under Curves","questions":25}],"chemistry":[{"chapter":"Equilibrium","questions":35},{"chapter":"Chemical Kinetics","questions":20}],"physics":[]},
+    "2026-10-05": {"maths":[{"chapter":"Conic Sections","questions":40},{"chapter":"Differential Equations","questions":20}],"chemistry":[{"chapter":"Equilibrium","questions":25}],"physics":[]},
+    "2026-10-06": {"maths":[{"chapter":"Conic Sections","questions":35},{"chapter":"Area Under Curves","questions":15},{"chapter":"Vector Algebra","questions":20}],"chemistry":[{"chapter":"Chemical Kinetics","questions":15}],"physics":[]},
+    "2026-10-07": {"maths":[{"chapter":"Conic Sections","questions":30},{"chapter":"Differential Equations","questions":20},{"chapter":"Vector Algebra","questions":15}],"chemistry":[{"chapter":"Hydrocarbons","questions":20}],"physics":[]},
+    "2026-10-08": {"maths":[{"chapter":"Conic Sections","questions":30},{"chapter":"Area Under Curves","questions":20},{"chapter":"Vector Algebra","questions":15}],"chemistry":[{"chapter":"Chemical Kinetics","questions":20}],"physics":[]},
+    "2026-10-09": {"maths":[{"chapter":"Conic Sections","questions":25},{"chapter":"Differential Equations","questions":25},{"chapter":"Vector Algebra","questions":15}],"chemistry":[{"chapter":"Hydrocarbons","questions":20}],"physics":[]},
+    "2026-10-10": {"maths":[{"chapter":"Conic Sections","questions":20},{"chapter":"Differential Equations","questions":20},{"chapter":"Area Under Curves","questions":15},{"chapter":"Vector Algebra","questions":10}],"chemistry":[{"chapter":"Equilibrium","questions":20}],"physics":[]},
+    "2026-10-11": {"maths":[{"chapter":"Conic Sections","questions":50},{"chapter":"Area Under Curves","questions":10}],"chemistry":[{"chapter":"Equilibrium","questions":55},{"chapter":"Chemical Kinetics","questions":15}],"physics":[]},
+    "2026-10-12": {"maths":[{"chapter":"Conic Sections","questions":3},{"chapter":"Area Under Curves","questions":36}],"chemistry":[{"chapter":"Equilibrium","questions":45},{"chapter":"Chemical Kinetics","questions":2}],"physics":[]},
+    "2026-10-13": {"maths":[{"chapter":"Area Under Curves","questions":40}],"chemistry":[{"chapter":"Equilibrium","questions":45}],"physics":[]},
+    "2026-10-14": {"maths":[{"chapter":"Area Under Curves","questions":1},{"chapter":"Differential Equations","questions":39}],"chemistry":[{"chapter":"Equilibrium","questions":31},{"chapter":"Chemical Kinetics","questions":14}],"physics":[]},
+    "2026-10-15": {"maths":[{"chapter":"Differential Equations","questions":40}],"chemistry":[{"chapter":"Chemical Kinetics","questions":45}],"physics":[]},
+    "2026-10-16": {"maths":[{"chapter":"Differential Equations","questions":34},{"chapter":"Vector Algebra","questions":6}],"chemistry":[{"chapter":"Chemical Kinetics","questions":45}],"physics":[]},
+    "2026-10-17": {"maths":[{"chapter":"Vector Algebra","questions":39}],"chemistry":[{"chapter":"Chemical Kinetics","questions":25},{"chapter":"Hydrocarbons","questions":21}],"physics":[]},
+    "2026-10-18": {"maths":[{"chapter":"Vector Algebra","questions":60},{"chapter":"Limits and Derivatives","questions":5}],"chemistry":[{"chapter":"Hydrocarbons","questions":65},{"chapter":"GOC","questions":5}],"physics":[]},
+    "2026-10-19": {"maths":[{"chapter":"Vector Algebra","questions":40}],"chemistry":[{"chapter":"Hydrocarbons","questions":45}],"physics":[]},
+    "2026-10-20": {"maths":[{"chapter":"Vector Algebra","questions":9},{"chapter":"Limits and Derivatives","questions":31}],"chemistry":[{"chapter":"Hydrocarbons","questions":33},{"chapter":"GOC","questions":12}],"physics":[]},
+    "2026-10-21": {"maths":[{"chapter":"Limits and Derivatives","questions":40}],"chemistry":[{"chapter":"GOC","questions":45}],"physics":[]},
+    "2026-10-22": {"maths":[{"chapter":"Limits and Derivatives","questions":28},{"chapter":"Continuity & Differentiability","questions":12}],"chemistry":[{"chapter":"GOC","questions":45}],"physics":[]},
+    "2026-10-23": {"maths":[{"chapter":"Continuity & Differentiability","questions":39}],"chemistry":[{"chapter":"GOC","questions":45},{"chapter":"Mole Concept","questions":1}],"physics":[]},
+    "2026-10-24": {"maths":[{"chapter":"Continuity & Differentiability","questions":40}],"chemistry":[{"chapter":"GOC","questions":45}],"physics":[]},
+    "2026-10-25": {"maths":[{"chapter":"Continuity & Differentiability","questions":50},{"chapter":"AOD","questions":10}],"chemistry":[{"chapter":"GOC","questions":51},{"chapter":"Mole Concept","questions":19}],"physics":[]},
+    "2026-10-26": {"maths":[{"chapter":"Continuity & Differentiability","questions":40}],"chemistry":[{"chapter":"Mole Concept","questions":46}],"physics":[]},
+    "2026-10-27": {"maths":[{"chapter":"Continuity & Differentiability","questions":25},{"chapter":"AOD","questions":15}],"chemistry":[{"chapter":"Mole Concept","questions":45}],"physics":[]},
+    "2026-10-28": {"maths":[{"chapter":"AOD","questions":40}],"chemistry":[{"chapter":"Mole Concept","questions":45}],"physics":[]},
+    "2026-10-29": {"maths":[{"chapter":"AOD","questions":39}],"chemistry":[{"chapter":"Mole Concept","questions":23},{"chapter":"Atomic Structure","questions":23}],"physics":[]},
+    "2026-10-30": {"maths":[{"chapter":"AOD","questions":40}],"chemistry":[{"chapter":"Atomic Structure","questions":45}],"physics":[]},
+    "2026-10-31": {"maths":[{"chapter":"AOD","questions":19},{"chapter":"Integrals","questions":21}],"chemistry":[{"chapter":"Atomic Structure","questions":45}],"physics":[]},
+    "2026-11-01": {"maths":[{"chapter":"Integrals","questions":50},{"chapter":"3D Geometry","questions":15}],"chemistry":[{"chapter":"Atomic Structure","questions":60}],"physics":[]},
+    "2026-11-02": {"maths":[{"chapter":"Integrals","questions":40}],"chemistry":[{"chapter":"Atomic Structure","questions":21},{"chapter":"Chemical Bonding","questions":24}],"physics":[]},
+    "2026-11-03": {"maths":[{"chapter":"Integrals","questions":40}],"chemistry":[{"chapter":"Chemical Bonding","questions":45}],"physics":[]},
+    "2026-11-04": {"maths":[{"chapter":"Integrals","questions":39}],"chemistry":[{"chapter":"Chemical Bonding","questions":45},{"chapter":"Chemical Thermodynamics","questions":1}],"physics":[]},
+    "2026-11-05": {"maths":[{"chapter":"Integrals","questions":40}],"chemistry":[{"chapter":"Chemical Bonding","questions":45}],"physics":[]},
+    "2026-11-06": {"maths":[{"chapter":"Integrals","questions":40}],"chemistry":[{"chapter":"Chemical Bonding","questions":45}],"physics":[]},
+    "2026-11-07": {"maths":[{"chapter":"Integrals","questions":40}],"chemistry":[{"chapter":"Chemical Bonding","questions":28},{"chapter":"Chemical Thermodynamics","questions":17}],"physics":[]},
+    "2026-11-08": {"maths":[{"chapter":"Integrals","questions":49},{"chapter":"3D Geometry","questions":11}],"chemistry":[{"chapter":"Chemical Thermodynamics","questions":55},{"chapter":"Solutions","questions":15}],"physics":[]},
+    "2026-11-09": {"maths":[{"chapter":"3D Geometry","questions":40}],"chemistry":[{"chapter":"Chemical Thermodynamics","questions":45},{"chapter":"Solutions","questions":1}],"physics":[]},
+    "2026-11-10": {"maths":[{"chapter":"3D Geometry","questions":39}],"chemistry":[{"chapter":"Chemical Thermodynamics","questions":45},{"chapter":"Solutions","questions":1}],"physics":[]},
+    "2026-11-11": {"maths":[{"chapter":"3D Geometry","questions":34},{"chapter":"Straight Lines","questions":6}],"chemistry":[{"chapter":"Chemical Thermodynamics","questions":36},{"chapter":"Solutions","questions":9}],"physics":[]},
+    "2026-11-12": {"maths":[{"chapter":"Straight Lines","questions":40}],"chemistry":[{"chapter":"Solutions","questions":45}],"physics":[]},
+    "2026-11-13": {"maths":[{"chapter":"Straight Lines","questions":40}],"chemistry":[{"chapter":"Solutions","questions":45}],"physics":[]},
+    "2026-11-14": {"maths":[{"chapter":"Straight Lines","questions":40}],"chemistry":[{"chapter":"Solutions","questions":45}],"physics":[]},
+    "2026-11-15": {"maths":[{"chapter":"Straight Lines","questions":27},{"chapter":"Sets","questions":31},{"chapter":"Relations & Functions","questions":7}],"chemistry":[{"chapter":"Solutions","questions":60},{"chapter":"Redox Reactions","questions":10}],"physics":[]},
+    "2026-11-16": {"maths":[{"chapter":"Relations & Functions","questions":39}],"chemistry":[{"chapter":"Redox Reactions","questions":38},{"chapter":"Electrochemistry","questions":8}],"physics":[]},
+    "2026-11-17": {"maths":[{"chapter":"Relations & Functions","questions":40}],"chemistry":[{"chapter":"Electrochemistry","questions":45}],"physics":[]},
+    "2026-11-18": {"maths":[{"chapter":"Relations & Functions","questions":40}],"chemistry":[{"chapter":"Electrochemistry","questions":45}],"physics":[]},
+    "2026-11-19": {"maths":[{"chapter":"Relations & Functions","questions":40}],"chemistry":[{"chapter":"Electrochemistry","questions":45}],"physics":[]},
+    "2026-11-20": {"maths":[{"chapter":"Relations & Functions","questions":20},{"chapter":"Complex Numbers & Quadratic Equations","questions":20}],"chemistry":[{"chapter":"Electrochemistry","questions":45}],"physics":[]},
+    "2026-11-21": {"maths":[{"chapter":"Complex Numbers & Quadratic Equations","questions":39}],"chemistry":[{"chapter":"Electrochemistry","questions":10},{"chapter":"Classification & Periodicity","questions":36}],"physics":[]},
+    "2026-11-22": {"maths":[{"chapter":"Complex Numbers & Quadratic Equations","questions":50},{"chapter":"Matrices","questions":10}],"chemistry":[{"chapter":"Classification & Periodicity","questions":65}],"physics":[]},
+    "2026-11-23": {"maths":[{"chapter":"Complex Numbers & Quadratic Equations","questions":40}],"chemistry":[{"chapter":"Classification & Periodicity","questions":39},{"chapter":"p-Block Group 13 & 14","questions":7}],"physics":[]},
+    "2026-11-24": {"maths":[{"chapter":"Complex Numbers & Quadratic Equations","questions":40}],"chemistry":[{"chapter":"p-Block Group 13 & 14","questions":45}],"physics":[]},
+    "2026-11-25": {"maths":[{"chapter":"Complex Numbers & Quadratic Equations","questions":40}],"chemistry":[{"chapter":"p-Block Group 13 & 14","questions":1},{"chapter":"p-Block Group 15–18","questions":44}],"physics":[]},
+    "2026-11-26": {"maths":[{"chapter":"Complex Numbers & Quadratic Equations","questions":40}],"chemistry":[{"chapter":"p-Block Group 15–18","questions":43},{"chapter":"d- and f-Block","questions":2}],"physics":[]},
+    "2026-11-27": {"maths":[{"chapter":"Complex Numbers & Quadratic Equations","questions":35},{"chapter":"Matrices","questions":4}],"chemistry":[{"chapter":"d- and f-Block","questions":46}],"physics":[]},
+    "2026-11-28": {"maths":[{"chapter":"Matrices","questions":40}],"chemistry":[{"chapter":"d- and f-Block","questions":45}],"physics":[]},
+    "2026-11-29": {"maths":[{"chapter":"Matrices","questions":33},{"chapter":"Determinants","questions":32}],"chemistry":[{"chapter":"d- and f-Block","questions":65}],"physics":[]},
+    "2026-11-30": {"maths":[{"chapter":"Determinants","questions":40}],"chemistry":[{"chapter":"d- and f-Block","questions":45}],"physics":[]},
+    "2026-12-01": {"maths":[{"chapter":"Determinants","questions":40}],"chemistry":[{"chapter":"d- and f-Block","questions":12},{"chapter":"Coordination Compounds","questions":33}],"physics":[]},
+    "2026-12-02": {"maths":[{"chapter":"Determinants","questions":40}],"chemistry":[{"chapter":"Coordination Compounds","questions":45}],"physics":[]},
+    "2026-12-03": {"maths":[{"chapter":"Determinants","questions":39}],"chemistry":[{"chapter":"Coordination Compounds","questions":45},{"chapter":"Haloalkanes & Haloarenes","questions":1}],"physics":[]},
+    "2026-12-04": {"maths":[{"chapter":"Determinants","questions":21},{"chapter":"P&C","questions":19}],"chemistry":[{"chapter":"Coordination Compounds","questions":45}],"physics":[]},
+    "2026-12-05": {"maths":[{"chapter":"P&C","questions":40}],"chemistry":[{"chapter":"Coordination Compounds","questions":45}],"physics":[]},
+    "2026-12-06": {"maths":[{"chapter":"P&C","questions":50},{"chapter":"Binomial Theorem","questions":10}],"chemistry":[{"chapter":"Coordination Compounds","questions":55},{"chapter":"Haloalkanes & Haloarenes","questions":20}],"physics":[]},
+    "2026-12-07": {"maths":[{"chapter":"P&C","questions":40}],"chemistry":[{"chapter":"Coordination Compounds","questions":45},{"chapter":"Haloalkanes & Haloarenes","questions":1}],"physics":[]},
+    "2026-12-08": {"maths":[{"chapter":"P&C","questions":40}],"chemistry":[{"chapter":"Coordination Compounds","questions":4},{"chapter":"Haloalkanes & Haloarenes","questions":41}],"physics":[]},
+    "2026-12-09": {"maths":[{"chapter":"P&C","questions":10},{"chapter":"Binomial Theorem","questions":29}],"chemistry":[{"chapter":"Haloalkanes & Haloarenes","questions":46}],"physics":[]},
+    "2026-12-10": {"maths":[{"chapter":"Binomial Theorem","questions":40}],"chemistry":[{"chapter":"Haloalkanes & Haloarenes","questions":45}],"physics":[]},
+    "2026-12-11": {"maths":[{"chapter":"Binomial Theorem","questions":40}],"chemistry":[{"chapter":"Haloalkanes & Haloarenes","questions":20},{"chapter":"Alcohols, Phenols & Ethers","questions":25}],"physics":[]},
+    "2026-12-12": {"maths":[{"chapter":"Binomial Theorem","questions":40}],"chemistry":[{"chapter":"Alcohols, Phenols & Ethers","questions":45}],"physics":[]},
+    "2026-12-13": {"maths":[{"chapter":"Binomial Theorem","questions":17},{"chapter":"Sequences & Series","questions":48}],"chemistry":[{"chapter":"Alcohols, Phenols & Ethers","questions":60}],"physics":[]},
+    "2026-12-14": {"maths":[{"chapter":"Sequences & Series","questions":40}],"chemistry":[{"chapter":"Alcohols, Phenols & Ethers","questions":41},{"chapter":"Aldehydes, Ketones & Carboxylic Acids","questions":4}],"physics":[]},
+    "2026-12-15": {"maths":[{"chapter":"Sequences & Series","questions":39}],"chemistry":[{"chapter":"Aldehydes, Ketones & Carboxylic Acids","questions":45},{"chapter":"Amines","questions":1}],"physics":[]},
+    "2026-12-16": {"maths":[{"chapter":"Sequences & Series","questions":40}],"chemistry":[{"chapter":"Aldehydes, Ketones & Carboxylic Acids","questions":45}],"physics":[]},
+    "2026-12-17": {"maths":[{"chapter":"Sequences & Series","questions":40}],"chemistry":[{"chapter":"Aldehydes, Ketones & Carboxylic Acids","questions":45}],"physics":[]},
+    "2026-12-18": {"maths":[{"chapter":"Sequences & Series","questions":40}],"chemistry":[{"chapter":"Aldehydes, Ketones & Carboxylic Acids","questions":45}],"physics":[]},
+    "2026-12-19": {"maths":[{"chapter":"Sequences & Series","questions":14},{"chapter":"Probability","questions":26}],"chemistry":[{"chapter":"Aldehydes, Ketones & Carboxylic Acids","questions":45}],"physics":[]},
+    "2026-12-20": {"maths":[{"chapter":"Probability","questions":50},{"chapter":"Statistics","questions":10}],"chemistry":[{"chapter":"Aldehydes, Ketones & Carboxylic Acids","questions":42},{"chapter":"Amines","questions":28}],"physics":[]},
+    "2026-12-21": {"maths":[{"chapter":"Probability","questions":39}],"chemistry":[{"chapter":"Amines","questions":45},{"chapter":"Biomolecules","questions":1}],"physics":[]},
+    "2026-12-22": {"maths":[{"chapter":"Probability","questions":40}],"chemistry":[{"chapter":"Amines","questions":45}],"physics":[]},
+    "2026-12-23": {"maths":[{"chapter":"Probability","questions":40}],"chemistry":[{"chapter":"Amines","questions":45}],"physics":[]},
+    "2026-12-24": {"maths":[{"chapter":"Probability","questions":12},{"chapter":"Statistics","questions":28}],"chemistry":[{"chapter":"Amines","questions":34},{"chapter":"Biomolecules","questions":11}],"physics":[]},
+    "2026-12-25": {"maths":[{"chapter":"Statistics","questions":40}],"chemistry":[{"chapter":"Biomolecules","questions":45}],"physics":[]},
+    "2026-12-26": {"maths":[{"chapter":"Statistics","questions":39}],"chemistry":[{"chapter":"Biomolecules","questions":46}],"physics":[]},
+    "2026-12-27": {"maths":[{"chapter":"Statistics","questions":19},{"chapter":"Trigonometric Functions & Identities","questions":46}],"chemistry":[{"chapter":"Biomolecules","questions":57}],"physics":[]},
+    "2026-12-28": {"maths":[{"chapter":"Trigonometric Functions & Identities","questions":40}],"chemistry":[{"chapter":"Biomolecules","questions":4},{"chapter":"Practical Chemistry","questions":41}],"physics":[]},
+    "2026-12-29": {"maths":[{"chapter":"Trigonometric Functions & Identities","questions":21},{"chapter":"Inverse Trigonometric Functions","questions":19}],"chemistry":[{"chapter":"Practical Chemistry","questions":45}],"physics":[]},
+    "2026-12-30": {"maths":[{"chapter":"Inverse Trigonometric Functions","questions":40}],"chemistry":[{"chapter":"Practical Chemistry","questions":45}],"physics":[]},
+    "2026-12-31": {"maths":[{"chapter":"Inverse Trigonometric Functions","questions":40}],"chemistry":[{"chapter":"Practical Chemistry","questions":45}],"physics":[]}
+  }
+};
+// ================================
+// END SCHEDULE DATA
+// ================================
+
+// ---------- helpers ----------
+const deepFreeze=o=>{Object.values(o).forEach(v=>v&&typeof v==='object'&&deepFreeze(v));return Object.freeze(o)};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const ORIG=deepFreeze(clone(INITIAL_DATA));          // immutable original
+const ORIGINAL_SCHEDULE=ORIG.schedule;
+const SUBJ=ORIG.subjects,SK=Object.keys(SUBJ),M=ORIG.metadata;
+const COL={maths:'#4cc9f0',physics:'#a78bfa',chemistry:'#fb923c'},col=s=>COL[s]||'#9aa7b8';
+const $=(s,e=document)=>e.querySelector(s);
+const MON='Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' '),MONL='January February March April May June July August September October November December'.split(' '),DOWL='Sunday Monday Tuesday Wednesday Thursday Friday Saturday'.split(' ');
+const pad=n=>String(n).padStart(2,'0'),iso=x=>`${x.getFullYear()}-${pad(x.getMonth()+1)}-${pad(x.getDate())}`;
+const pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const dayN=s=>{const[a,b,c]=s.split('-').map(Number);return Date.UTC(a,b-1,c)/864e5};
+const diff=(a,b)=>dayN(b)-dayN(a),addD=(s,n)=>{const x=pd(s);x.setDate(x.getDate()+n);return iso(x)};
+const TD=()=>iso(new Date());
+const fmtS=s=>{const x=pd(s);return x.getDate()+' '+MON[x.getMonth()]},fmtL=s=>{const x=pd(s);return`${DOWL[x.getDay()]}, ${x.getDate()} ${MONL[x.getMonth()]} ${x.getFullYear()}`};
+const nf=n=>Math.round(n).toLocaleString('en-IN'),pc=(a,b)=>b>0?Math.min(100,a/b*100):0,clamp=(n,a,b)=>Math.min(b,Math.max(a,Math.round(+n||0)));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DATES=[];for(let d=M.startDate;d<=M.endDate;d=addD(d,1))DATES.push(d);
+const dk=(d,s,c)=>`${d}|${s}|${c}`;
+const inRange=d=>d>=M.startDate&&d<=M.endDate;
+const focusDefault=()=>{const t=TD();return t<M.startDate?M.startDate:t>M.endDate?M.endDate:t};
+
+// ---------- state (user-edited copy, persisted) ----------
+const KEY='pcm_command_center_v1';
+const fresh=()=>({version:M.version,schedule:clone(ORIG.schedule),chapters:clone(ORIG.chapters),done:{},missed:{},log:[],settings:{}});
+function load(){let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+ if(!s||!s.schedule)return fresh();
+ if(s.version!==M.version){try{localStorage.setItem(KEY+'_backup_'+s.version,JSON.stringify(s))}catch(e){}
+  s.schedule=clone(ORIG.schedule);s.chapters=clone(ORIG.chapters);s.version=M.version;
+  s.notice='New schedule data loaded ('+M.version+'). Your progress was kept; your edits to the old schedule were backed up in localStorage.'}
+ s.done=s.done||{};s.missed=s.missed||{};s.log=s.log||[];s.settings=s.settings||{};return s}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let S=load(),undoStack=[];
+let ui={view:'today',date:null,q:'',modal:null,scope:'full',f:{subj:'all',status:'all',range:'all',from:'',to:''},cf:{subj:'all',sort:'default',st:'all'}};
+function mutate(fn,msg){undoStack.push(JSON.stringify(S));if(undoStack.length>40)undoStack.shift();fn();if(msg){S.log.unshift({t:Date.now(),m:msg});S.log.length=Math.min(S.log.length,25)}save();render()}
+function undo(){if(!undoStack.length)return;S=JSON.parse(undoStack.pop());save();render()}
+
+// ---------- derived data (nothing stored, all calculated) ----------
+function items(d,sf){const o=[],sc=S.schedule[d]||{};for(const s of SK){if(sf&&sf!=='all'&&sf!==s)continue;(sc[s]||[]).forEach((it,i)=>{o.push({d,s,i,ch:it.chapter,q:it.questions,c:Math.min(S.done[dk(d,s,it.chapter)]||0,it.questions)})})}return o}
+function dayStats(d,sf){const it=items(d,sf),q=it.reduce((a,x)=>a+x.q,0),c=it.reduce((a,x)=>a+x.c,0);return{q,c,rem:q-c,pct:pc(c,q),items:it,st:dstat(d,q,c)}}
+function dstat(d,q,c){if(!q)return'empty';if(q===c)return'done';if(S.missed[d])return'missed';if(c>0)return'partial';return d>TD()?'future':'notstarted'}
+const STL={done:'Completed',partial:'In progress',notstarted:'Not started',future:'Upcoming',missed:'Missed',empty:'No tasks'};
+const isPending=s=>!(S.chapters[s]||[]).length&&!DATES.some(d=>((S.schedule[d]||{})[s]||[]).length);
+function calculateProgress(){
+ const t=TD(),R={q:0,c:0,sub:{},backlog:0,overdue:0,expY:0,dDone:0,dMiss:0,wk:0,mo:0,streak:0};
+ SK.forEach(s=>R.sub[s]={q:0,c:0});
+ const ws=addD(t,-((pd(t).getDay()+6)%7)),we=addD(ws,6);
+ for(const d of DATES){const st=dayStats(d);R.q+=st.q;R.c+=st.c;st.items.forEach(x=>{R.sub[x.s].q+=x.q;R.sub[x.s].c+=x.c});
+  if(d<t)R.expY+=st.q;if(st.st==='done')R.dDone++;
+  if(S.missed[d]&&st.q){R.dMiss++;R.backlog+=st.rem}else if(d<t&&st.rem>0)R.overdue+=st.rem;
+  if(d>=ws&&d<=we)R.wk+=st.c;if(d.slice(0,7)===t.slice(0,7))R.mo+=st.c}
+ for(let d=t>M.endDate?M.endDate:addD(t,-1);d>=M.startDate;d=addD(d,-1)){if(d===t)continue;const s=dayStats(d);if(!s.q)continue;if(s.st==='done')R.streak++;else break}
+ if(dayStats(t).st==='done')R.streak++;
+ R.rem=R.q-R.c;R.delta=R.c-R.expY;R.today=dayStats(t);R.cd=Math.max(0,diff(t,M.endDate));
+ const el=t<M.startDate?0:diff(M.startDate,t>M.endDate?M.endDate:t)+1,left=t>M.endDate?0:diff(t<M.startDate?M.startDate:t,M.endDate)+1;
+ R.avg=el?R.c/el:null;R.req=left?R.rem/left:null;R.left=left;return R}
+function chapterStats(){const o=[];for(const s of SK)for(const ch of S.chapters[s]||[]){let sched=0,c=0;for(const d of DATES)for(const x of items(d,s))if(x.ch===ch.name){sched+=x.q;c+=x.c}
+ o.push({s,name:ch.name,total:ch.total,sched,c,rem:Math.max(ch.total-c,0),pct:pc(c,ch.total),state:c>=ch.total&&ch.total>0?'completed':c>0?'progress':'untouched'})}return o}
+
+// ---------- mutations (record/show only — NEVER redistribute) ----------
+function markCompleted(d,s,i,n){const it=S.schedule[d][s][i];n=clamp(n,0,it.questions);mutate(()=>{S.done[dk(d,s,it.chapter)]=n},`${fmtS(d)} ${it.chapter}: completed ${n}/${it.questions}`)}
+function updateQuestionAmount(d,s,i,n){const it=S.schedule[d][s][i],o=it.questions;n=clamp(n,0,100000);if(n!==o)mutate(()=>{it.questions=n},`${fmtS(d)} ${it.chapter}: scheduled ${o}→${n}`)}
+function markMissed(d){mutate(()=>{S.missed[d]?delete S.missed[d]:S.missed[d]=true},`${fmtS(d)}: ${S.missed[d]?'unmarked':'marked'} missed`)}
+function renameDone(f){const n={};for(const k in S.done){const[d,s,c]=k.split('|'),r=f(d,s,c);n[r?dk(...r):k]=S.done[k]}S.done=n}
+function addChapter(s,name,total){name=name.trim();if(!name||(S.chapters[s]||[]).some(c=>c.name===name))return toast('Name empty or already exists');mutate(()=>{(S.chapters[s]=S.chapters[s]||[]).push({name,total:clamp(total,0,1e5)})},`Added chapter ${name}`)}
+function setChapterTotal(s,name,n){mutate(()=>{S.chapters[s].find(c=>c.name===name).total=clamp(n,0,1e5)},`${name}: total → ${clamp(n,0,1e5)}`)}
+function renameChapter(s,old,nw){nw=nw.trim();if(!nw||nw===old)return render();if(S.chapters[s].some(c=>c.name===nw)){toast('Name already exists');return render()}
+ mutate(()=>{S.chapters[s].find(c=>c.name===old).name=nw;for(const d in S.schedule)(S.schedule[d][s]||[]).forEach(it=>{if(it.chapter===old)it.chapter=nw});renameDone((d,s2,c)=>s2===s&&c===old?[d,s,nw]:null)},`Renamed ${old} → ${nw}`)}
+function setChapterSubject(s,name,s2){if(s===s2)return;if((S.chapters[s2]||[]).some(c=>c.name===name)){toast('Already exists in target subject');return render()}
+ mutate(()=>{const i=S.chapters[s].findIndex(c=>c.name===name),[c]=S.chapters[s].splice(i,1);(S.chapters[s2]=S.chapters[s2]||[]).push(c);
+  for(const d in S.schedule){const a=S.schedule[d][s]||[];const mv=a.filter(it=>it.chapter===name);if(mv.length){S.schedule[d][s]=a.filter(it=>it.chapter!==name);(S.schedule[d][s2]=S.schedule[d][s2]||[]).push(...mv)}}
+  renameDone((d,sx,c)=>sx===s&&c===name?[d,s2,name]:null)},`${name}: subject ${s}→${s2}`)}
+function deleteChapter(s,name){let n=0;DATES.forEach(d=>items(d,s).forEach(x=>{if(x.ch===name)n+=x.q}));
+ if(!confirm(`Delete "${name}"?${n?`\nThis also removes its ${n} scheduled questions from the calendar.`:''}`))return;
+ mutate(()=>{S.chapters[s]=S.chapters[s].filter(c=>c.name!==name);for(const d in S.schedule)if(S.schedule[d][s])S.schedule[d][s]=S.schedule[d][s].filter(it=>it.chapter!==name);for(const k in S.done)if(k.split('|')[1]===s&&k.split('|')[2]===name)delete S.done[k]},`Deleted chapter ${name}`)}
+function resetSchedule(){if(confirm('RESET SCHEDULE to the original supplied version?\n\nAll your edits to question amounts and chapters are lost.\nCompletion progress and missed days are KEPT.'))mutate(()=>{S.schedule=clone(ORIG.schedule);S.chapters=clone(ORIG.chapters)},'Schedule reset to original')}
+function resetProgress(){if(confirm('RESET PROGRESS?\n\nAll completed counts and missed-day marks are erased.\nYour schedule edits are KEPT.'))mutate(()=>{S.done={};S.missed={}},'Progress reset')}
+function resetEverything(){if(confirm('RESET EVERYTHING?\n\nSchedule edits AND all progress will be erased.')&&prompt('Type RESET to confirm')==='RESET'){S=fresh();undoStack=[];save();render()}}
+
+// ---------- AI-agent export ----------
+function generateAgentUpdate(scope='full',dd){
+ const C=calculateProgress(),L=[],t=TD(),P=(...a)=>L.push(...a);
+ const st=x=>x==='missed'?'MISSED':STL[x];
+ const dayB=d=>{const o=ORIGINAL_SCHEDULE[d]||{},oq=SK.reduce((a,s)=>a+(o[s]||[]).reduce((b,i)=>b+i.questions,0),0),D=dayStats(d);
+  P(`Date: ${fmtL(d)}`,`Original scheduled workload: ${oq} Q`,`Current scheduled workload: ${D.q} Q`,`Completed: ${D.c} Q`,`Remaining: ${D.rem} Q`,`Status: ${S.missed[d]?`MISSED${D.rem?` — ${D.rem} Q carried as backlog`:''}`:st(D.st)}`,'Tasks:');
+  D.items.forEach(x=>{const oi=(o[x.s]||[]).find(i=>i.chapter===x.ch);P(`- ${SUBJ[x.s]}: ${x.ch} — ${x.c}/${x.q}${oi&&oi.questions!==x.q?` (orig ${oi.questions})`:''}`)});SK.filter(isPending).forEach(s=>P(`- ${SUBJ[s]}: PENDING`));P('')};
+ const overview=()=>{P('OVERALL',`Known questions (scheduled): ${C.q}`,`Completed: ${C.c}`,`Remaining: ${C.rem}`);
+  SK.forEach(s=>P(isPending(s)?`${SUBJ[s]}: PENDING (no chapter counts supplied)`:`${SUBJ[s]}: ${C.sub[s].c}/${C.sub[s].q}`));
+  P(`Days left to ${fmtS(M.endDate)}: ${C.cd}`,`Current average: ${C.avg==null?'n/a':C.avg.toFixed(1)} Q/day`,`Required average from today: ${C.req==null?'n/a':C.req.toFixed(1)} Q/day`,
+  `Vs schedule (through yesterday): ${C.delta>0?'+'+C.delta+' Q AHEAD':C.delta<0?-C.delta+' Q BEHIND':'ON TRACK'}`,`Backlog from missed days: ${C.backlog} Q`,`Unfinished past days not marked missed: ${C.overdue} Q`,
+  `Today (${fmtS(inRange(t)?t:focusDefault())}): target ${C.today.q}, completed ${C.today.c}`,'')};
+ const missedB=()=>{P('MISSED / UNFINISHED DAYS');let n=0;for(const d of DATES){const D=dayStats(d);if(!D.q)continue;const m=S.missed[d];if((m||d<t)&&D.rem>0){n++;P(`${fmtS(d)}${m?' [MISSED]':' [past, unfinished]'}: scheduled ${D.q}, completed ${D.c}, remaining ${D.rem} — ${D.items.filter(x=>x.q>x.c).map(x=>`${x.ch} ${x.q-x.c} left`).join('; ')}`)}}
+  P(n?`Total carried: ${C.backlog+C.overdue} Q`:'None','')};
+ const changesB=()=>{P('CHANGES VS ORIGINAL');let n=0;const ds=new Set([...Object.keys(ORIGINAL_SCHEDULE),...Object.keys(S.schedule)]);
+  [...ds].sort().forEach(d=>SK.forEach(s=>{const a={},b={};((ORIGINAL_SCHEDULE[d]||{})[s]||[]).forEach(i=>a[i.chapter]=i.questions);((S.schedule[d]||{})[s]||[]).forEach(i=>b[i.chapter]=i.questions);
+   new Set([...Object.keys(a),...Object.keys(b)]).forEach(c=>{if((a[c]||0)!==(b[c]||0)){n++;P(`${fmtS(d)} ${SUBJ[s]} ${c}: ${a[c]||0} → ${b[c]||0} Q`)}})}));
+  SK.forEach(s=>{const oc=ORIG.chapters[s]||[],cc=S.chapters[s]||[];cc.forEach(c=>{const o=oc.find(x=>x.name===c.name);if(!o){n++;P(`New chapter: ${SUBJ[s]} ${c.name} total ${c.total}`)}else if(o.total!==c.total){n++;P(`Chapter total: ${SUBJ[s]} ${c.name}: ${o.total} → ${c.total}`)}});oc.forEach(o=>{if(!cc.some(c=>c.name===o.name)){n++;P(`Removed chapter: ${SUBJ[s]} ${o.name}`)}})});
+  if(!n)P('No changes');P('')};
+ const chapB=()=>{P('CHAPTER PROGRESS (completed/total, scheduled, unallocated)');chapterStats().forEach(c=>P(`${SUBJ[c.s]} — ${c.name}: ${c.c}/${c.total} (${c.pct.toFixed(0)}%), remaining ${c.rem}, scheduled ${c.sched}${c.total>c.sched?`, UNALLOCATED ${c.total-c.sched}`:c.sched>c.total?`, OVER-SCHEDULED ${c.sched-c.total}`:''}`));P('')};
+ P('SCHEDULE UPDATE',`Generated: ${fmtL(t)}`,`Window: ${fmtS(M.startDate)} → ${fmtS(M.endDate)} ${M.endDate.slice(0,4)}`,'');
+ if(scope==='day')dayB(dd||ui.date||focusDefault());else if(scope==='missed')missedB();else if(scope==='changes')changesB();else if(scope==='chapters')chapB();else{overview();missedB();changesB();chapB()}
+ return L.join('\n').trim()}
+
+// ---------- UI fragments ----------
+const bar=(p,c,ok)=>`<i class="bar ${ok?'ok':''}" style="--sc:${c||'var(--ac)'}"><u style="width:${p}%"></u></i>`;
+const pill=s=>`<span class="pill p-${s}">${s==='missed'?'MISSED':STL[s].toUpperCase()}</span>`;
+const da=x=>`data-d="${x.d}" data-s="${x.s}" data-i="${x.i}"`;
+const task=x=>`<div class="task ${x.q&&x.c>=x.q?'ok':''}"><div class="tn"><b>${esc(x.ch)}</b><small>${x.c}/${x.q} done · ${x.q-x.c} left</small></div>
+<div class="tc"><label>Sched<input type="number" inputmode="numeric" min="0" value="${x.q}" data-chg="sched" ${da(x)}></label><label>Done<input type="number" inputmode="numeric" min="0" max="${x.q}" value="${x.c}" data-chg="done" ${da(x)}></label></div>
+<div class="tb">${[1,5,10].map(n=>`<button data-act="add" data-n="${n}" ${da(x)}>+${n}</button>`).join('')}<button class="ck" data-act="full" ${da(x)} title="Complete / clear">✓</button></div>${bar(pc(x.c,x.q),col(x.s),x.c>=x.q&&x.q)}</div>`;
+function ring(D,label){const p=D.pct;return`<div class="ring ${D.rem===0&&D.q?'ok':''}"><svg viewBox="0 0 120 120"><circle class="rb" cx="60" cy="60" r="52"/><circle class="rf" cx="60" cy="60" r="52" stroke-dasharray="${p*3.267} 400" transform="rotate(-90 60 60)"/><text x="60" y="68">${Math.round(p)}%</text></svg>
+<div><div class="lbl">${label}</div><div class="big">${nf(D.c)}<span class="mut" style="font-size:16px"> / ${nf(D.q)}</span></div><div class="mut">questions completed</div><div class="mono" style="margin-top:4px">${nf(D.rem)} remaining</div></div></div>`}
+function renderDay(d,nav){const D=dayStats(d),t=TD(),ms=!!S.missed[d];
+ const ban=!D.q?'':D.rem===0?`<div class="banner ok">0 REMAINING — COMPLETED</div>`:ms?`<div class="banner bad">MISSED — ${D.rem} Q CARRIED AS BACKLOG</div>`:`<div class="banner no">${D.rem} REMAINING — INCOMPLETE</div>`;
+ return`<section class="card"><div class="dh"><div style="display:flex;gap:6px;align-items:center">${nav?`<button data-act="dnav" data-n="-1">‹</button>`:''}<div><h3>${d===t?'TODAY · ':''}${fmtL(d)}</h3><span class="mut">Scheduled: ${D.q} Q</span></div>${nav?`<button data-act="dnav" data-n="1">›</button>`:''}</div>${pill(D.st)}</div>
+<div class="strip"><div><span class="lbl">Scheduled</span><b>${D.q}</b></div><div><span class="lbl">Completed</span><b>${D.c}</b></div><div><span class="lbl">Remaining</span><b>${D.rem}</b></div><div><span class="lbl">Complete</span><b>${Math.round(D.pct)}%</b></div></div>${bar(D.pct,'var(--ac)',D.rem===0&&D.q)}${ban}
+${SK.map(s=>{const it=D.items.filter(x=>x.s===s);return`<div class="sb" style="--sc:${col(s)}"><h4>${SUBJ[s]}<span class="mono">${it.reduce((a,x)=>a+x.q,0)} Q</span></h4>${it.length?it.map(task).join(''):`<p class="mut">${isPending(s)?'Pending':'Nothing scheduled'}</p>`}</div>`}).join('')}
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="${ms?'':'danger'}" data-act="miss" data-d="${d}">${ms?'UNMARK MISSED':'MARK DAY AS MISSED'}</button><button class="pri" data-act="copyday" data-d="${d}">COPY UPDATE FOR AI AGENT</button></div></section>`}
+function renderDashboard(){const C=calculateProgress(),t=TD(),fd=ui.date||focusDefault(),F=dayStats(fd),inR=inRange(t);
+ const tag=fd===t?'TODAY':fd>t?(inR?'UPCOMING':'SCHEDULE STARTS '+fmtS(fd).toUpperCase()):'PAST DAY';
+ const vs=C.delta>0?'AHEAD':C.delta<0?'BEHIND':'TRACK';
+ const nx=[];for(let d=t<M.startDate?M.startDate:t,n=0;d<=M.endDate&&n<7;d=addD(d,1),n++)nx.push(d);
+ return`${S.notice?`<div class="notice"><span>${esc(S.notice)}</span><button data-act="dismiss">OK</button></div>`:''}
+${!inR?`<div class="notice"><span>${t<M.startDate?`Schedule starts in ${diff(t,M.startDate)} day(s) — ${fmtL(M.startDate)}.`:'Schedule period has ended.'}</span></div>`:''}
+<div class="grid"><div class="card">${ring(F,tag+' · '+fmtS(fd))}${F.q?(F.rem===0?`<div class="banner ok">COMPLETED</div>`:`<div class="banner no">${F.rem} REMAINING — INCOMPLETE</div>`):''}</div>
+<div class="card hide-f"><div class="lbl">Overall PCM progress</div><div class="big">${nf(C.c)}<span class="mut" style="font-size:16px"> / ${nf(C.q)}</span></div>${bar(pc(C.c,C.q),'var(--ac)')}
+<div class="srow"><span class="mono">${Math.round(pc(C.c,C.q))}%</span><span><b class="mono">${nf(C.rem)}</b> Q remaining</span></div><div class="srow"><span><b class="mono">${C.cd}</b> days to ${fmtS(M.endDate)}</span><span class="mut">${C.left} schedule days left</span></div>
+${SK.map(s=>`<div class="srow" style="color:${col(s)}"><span>${SUBJ[s]}</span><span class="mono">${isPending(s)?'Pending':nf(C.sub[s].c)+' / '+nf(C.sub[s].q)}</span></div>`).join('')}</div>
+<div class="card hide-f"><div class="lbl">Schedule status</div><div class="big ${vs}">${vs==='TRACK'?'ON TRACK':vs}</div><div class="mono ${vs}">${C.delta>0?'+'+C.delta+' Q ahead of schedule':C.delta<0?-C.delta+' Q behind schedule':'0 Q difference'}</div>
+<div class="srow"><span>Current average</span><b class="mono">${C.avg==null?'—':C.avg.toFixed(0)} Q/day</b></div><div class="srow"><span>Required from today</span><b class="mono">${C.req==null?'—':C.req.toFixed(0)} Q/day</b></div>
+<div class="srow"><span>Backlog (missed days)</span><b class="mono" style="color:${C.backlog?'var(--bad)':'inherit'}">${C.backlog} Q</b></div>${C.overdue?`<div class="srow"><span>Unfinished past days</span><b class="mono" style="color:var(--warn)">${C.overdue} Q</b></div>`:''}</div></div>
+<h2>${fd===t?'Today':'Day view'}</h2>${renderDay(fd,true)}
+<div class="hide-f"><h2>Next 7 days</h2><div class="card" style="padding:6px 12px"><table><tr><th>Date</th><th>Target</th><th>Done</th><th>Left</th></tr>${nx.map(d=>{const D=dayStats(d);return`<tr data-act="open" data-d="${d}" class="${d===t?'td':''}"><td>${d===t?'<b>● ':''}${fmtS(d)} <span class="mut">${DOWL[pd(d).getDay()].slice(0,3)}</span></td><td class="mono">${D.q}</td><td class="mono">${D.c}</td><td class="mono">${D.rem}</td></tr>`}).join('')}</table></div>
+<h2>Statistics</h2><div class="stats">${[['Total questions',nf(C.q)],['Completed',nf(C.c)],['Remaining',nf(C.rem)],["Today's target",C.today.q],["Today's completed",C.today.c],['Current streak',C.streak+' d'],['Days completed',C.dDone],['Days missed',C.dMiss],['This week',C.wk+' Q'],['This month',C.mo+' Q'],['Backlog',C.backlog+' Q']].map(([a,b])=>`<div><span class="lbl">${a}</span><b>${b}</b></div>`).join('')}</div></div>`}
+
+function renderCalendar(){const f=ui.f,t=TD(),ws=addD(t,-((pd(t).getDay()+6)%7)),mx=Math.max(1,...DATES.map(d=>dayStats(d,f.subj).q));
+ const rng=d=>f.range==='all'||(f.range==='today'&&d===t)||(f.range==='week'&&d>=ws&&d<=addD(ws,6))||(f.range==='month'&&d.slice(0,7)===t.slice(0,7))||(f.range==='custom'&&(!f.from||d>=f.from)&&(!f.to||d<=f.to));
+ const sm=st=>f.status==='all'||st===f.status||(f.status==='notstarted'&&st==='future');
+ const months=[...new Set(DATES.map(d=>d.slice(0,7)))];
+ const sel=(k,o)=>`<select data-chg="filt" data-k="${k}">${o.map(([v,l])=>`<option value="${v}" ${f[k]===v?'selected':''}>${l}</option>`).join('')}</select>`;
+ return`<div class="filters">${sel('subj',[['all','All subjects'],...SK.map(s=>[s,SUBJ[s]])])}${sel('status',[['all','Any status'],['done','Completed'],['partial','In progress'],['notstarted','Not started'],['missed','Missed']])}${sel('range',[['all','All dates'],['today','Today'],['week','This week'],['month','This month'],['custom','Custom range']])}
+${f.range==='custom'?`<input type="date" value="${f.from}" min="${M.startDate}" max="${M.endDate}" data-chg="filt" data-k="from"><input type="date" value="${f.to}" min="${M.startDate}" max="${M.endDate}" data-chg="filt" data-k="to">`:''}</div>
+<div class="leg"><span><i style="background:var(--ok)"></i>Completed</span><span><i style="background:var(--warn)"></i>In progress</span><span><i style="background:#8795a8"></i>Not started</span><span><i style="background:var(--bad)"></i>Missed</span><span><i style="background:#2b6a85"></i>Future</span><span><i style="outline:2px solid var(--ac)"></i>Today</span><span style="color:var(--ac)">Underlined = Sunday · shade = workload</span></div>
+${months.map(m=>{const[y,mo]=m.split('-').map(Number),first=new Date(y,mo-1,1).getDay(),n=new Date(y,mo,0).getDate();let h=`<h2>${MONL[mo-1]} ${y}</h2><div class="mon">${DOWL.map(x=>`<div class="dow">${x.slice(0,3)}</div>`).join('')}${'<div class="blank"></div>'.repeat(first)}`;
+  for(let i=1;i<=n;i++){const d=`${m}-${pad(i)}`;if(!inRange(d)){h+='<div class="blank"></div>';continue}const D=dayStats(d,f.subj),dim=!(rng(d)&&sm(D.st));
+   h+=`<button class="cell st-${D.st} ${pd(d).getDay()===0?'sun':''} ${d===t?'today':''} ${dim?'dim':''}" style="--i:${D.q/mx}" data-act="open" data-d="${d}"><b>${i}</b><span>${D.q}</span><em>${D.c} done · ${D.rem} left</em></button>`}return h+'</div>'}).join('')}`}
+
+function renderChapterProgress(){const c=ui.cf,sel=(k,o)=>`<select data-chg="cf" data-k="${k}">${o.map(([v,l])=>`<option value="${v}" ${c[k]===v?'selected':''}>${l}</option>`).join('')}</select>`;
+ let a=chapterStats().filter(x=>(c.subj==='all'||x.s===c.subj)&&(c.st==='all'||x.state===c.st));
+ const so={pct:(x,y)=>y.pct-x.pct,rem:(x,y)=>y.rem-x.rem,big:(x,y)=>y.total-x.total,az:(x,y)=>x.name.localeCompare(y.name)};if(so[c.sort])a.sort(so[c.sort]);
+ const BC={completed:'var(--ok)',progress:'var(--warn)',untouched:'var(--mut)'},BL={completed:'COMPLETED',progress:'IN PROGRESS',untouched:'UNTOUCHED'};
+ return`<div class="filters">${sel('subj',[['all','All subjects'],...SK.map(s=>[s,SUBJ[s]])])}${sel('st',[['all','Any state'],['completed','Completed'],['progress','In progress'],['untouched','Untouched']])}${sel('sort',[['default','Sort: syllabus order'],['pct','Completion %'],['rem','Most remaining'],['big','Largest workload'],['az','Alphabetical']])}<span class="mut">${a.length} chapters</span></div>
+<div class="cg">${a.map(x=>chapCard(x,BC,BL)).join('')||'<p class="mut">No chapters.</p>'}</div>${SK.filter(isPending).map(s=>`<div class="card" style="margin-top:14px;border-left:3px solid ${col(s)}">${SUBJ[s]}: <b>Pending</b> — add chapters in Manage or replace the schedule data.</div>`).join('')}`}
+const chapCard=(x,BC,BL)=>`<div class="card" style="--sc:${col(x.s)}"><div class="ch"><b>${esc(x.name)}</b><span class="badge" style="color:${BC[x.state]}">${BL[x.state]}</span></div><div class="mut" style="color:${col(x.s)}">${SUBJ[x.s]}</div>
+<div class="srow"><span>Completed: <b class="mono">${x.c} / ${x.total}</b></span><b class="mono">${x.pct.toFixed(1)}%</b></div>${bar(x.pct,col(x.s),x.state==='completed')}<div class="srow"><span>Remaining: <b class="mono">${x.rem}</b></span><span class="mut">Scheduled ${x.sched}${x.sched<x.total?` · <span style="color:var(--warn)">${x.total-x.sched} unallocated</span>`:x.sched>x.total?` · <span style="color:var(--bad)">${x.sched-x.total} over</span>`:''}</span></div></div>`;
+
+function renderManage(){const cs=Object.fromEntries(chapterStats().map(x=>[x.s+'|'+x.name,x]));
+ return`<div class="card"><h3>Add chapter</h3><div class="filters" style="margin:10px 0 0"><select id="ns">${SK.map(s=>`<option value="${s}">${SUBJ[s]}</option>`).join('')}</select><input id="nn" type="text" placeholder="Chapter name"><input id="nt" type="number" min="0" placeholder="Total Q"><button class="pri" data-act="addch">Add</button></div>
+<p class="mut" style="margin:8px 0 0">Changing totals or adding chapters only updates tracking. It never moves scheduled work — your AI planner does that.</p></div>
+${SK.map(s=>`<h2 style="color:${col(s)}">${SUBJ[s]}</h2><div class="card">${(S.chapters[s]||[]).map(c=>{const x=cs[s+'|'+c.name],a=`data-s="${s}" data-n="${esc(c.name)}"`;return`<div class="mrow"><input type="text" value="${esc(c.name)}" data-chg="chname" ${a}><select data-chg="chsub" ${a}>${SK.map(k=>`<option value="${k}" ${k===s?'selected':''}>${SUBJ[k]}</option>`).join('')}</select><input type="number" min="0" value="${c.total}" data-chg="chtotal" ${a}><span class="mono mut">${x.c} done · ${x.rem} left · ${x.sched} sched</span><button class="danger" data-act="delch" ${a}>✕</button></div>`}).join('')||'<span class="mut">Pending — no chapters yet.</span>'}</div>`).join('')}
+<h2>Reset (separate actions)</h2><div class="card"><div class="filters"><button class="danger" data-act="rsched">Reset schedule to original</button><button class="danger" data-act="rprog">Reset progress only</button><button class="danger" data-act="rall">Reset everything</button></div><p class="mut" style="margin:0">Schedule reset keeps progress. Progress reset keeps schedule edits. Original data is never overwritten. v${esc(M.version)}</p></div>
+<h2>Recent edits</h2><div class="card">${S.log.slice(0,10).map(l=>`<div class="srow"><span>${esc(l.m)}</span><span class="mut mono">${new Date(l.t).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span></div>`).join('')||'<span class="mut">No edits yet.</span>'}</div>`}
+
+function renderAgent(){const sc=[['full','Full update'],['day','Selected day'],['missed','Missed / unfinished'],['changes','Changes vs original'],['chapters','Chapter progress']];
+ return`<div class="filters">${sc.map(([v,l])=>`<button class="${ui.scope===v?'pri':''}" data-act="scope" data-v="${v}">${l}</button>`).join('')}</div><div class="card"><pre id="pv">${esc(generateAgentUpdate(ui.scope,ui.date||focusDefault()))}</pre><button class="pri" data-act="copyscope" style="margin-top:10px">COPY UPDATE FOR AI AGENT</button></div>
+<p class="mut">Paste this into your scheduling agent. When it returns new data, replace only the SCHEDULE DATA block and bump <span class="mono">metadata.version</span> — progress is kept.</p>`}
+
+function renderSearch(){const q=ui.q.trim().toLowerCase(),t=TD();const cs=chapterStats().filter(x=>x.name.toLowerCase().includes(q));
+ const ds=DATES.filter(d=>fmtS(d).toLowerCase().includes(q)||d.includes(q)||`${pd(d).getDate()} ${MONL[pd(d).getMonth()]}`.toLowerCase().includes(q)).slice(0,31);
+ return`<h2>Chapters matching “${esc(ui.q)}”</h2>${cs.map(x=>{const dl=DATES.map(d=>({d,x:items(d,x.s).find(i=>i.ch===x.name)})).filter(z=>z.x);return`<div class="card" style="--sc:${col(x.s)}"><div class="ch"><b>${esc(x.name)}</b><span class="mono">${x.pct.toFixed(1)}%</span></div>${bar(x.pct,col(x.s),x.state==='completed')}<div class="srow"><span>Total <b class="mono">${x.total}</b></span><span>Completed <b class="mono">${x.c}</b></span><span>Remaining <b class="mono">${x.rem}</b></span></div><div>${dl.map(z=>`<button class="chip" data-act="open" data-d="${z.d}">${fmtS(z.d)} · ${z.x.c}/${z.x.q}</button>`).join('')||'<span class="mut">Not scheduled</span>'}</div></div>`}).join('')||'<p class="mut">None</p>'}
+<h2>Dates</h2>${ds.length&&q.length>1?ds.map(d=>{const D=dayStats(d);return`<button class="chip" data-act="open" data-d="${d}">${fmtS(d)} · ${D.c}/${D.q}</button>`}).join(''):'<p class="mut">None</p>'}`}
+
+function render(){const app=$('#app');app.innerHTML=ui.q.trim()?renderSearch():{today:renderDashboard,calendar:renderCalendar,chapters:renderChapterProgress,manage:renderManage,agent:renderAgent}[ui.view]();
+ document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===ui.view&&!ui.q.trim()));
+ $('#modal').innerHTML=ui.modal?`<div class="ov" data-act="closeModal"><div class="mdl"><div style="text-align:right;margin-bottom:6px"><button data-act="closeModal2">Close ✕</button></div>${renderDay(ui.modal,false)}</div></div>`:'';
+ $('#undo').disabled=!undoStack.length;document.body.classList.toggle('focus',!!S.settings.focus)}
+
+// ---------- events ----------
+function toast(m){const e=$('#toast');e.textContent=m;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),1400)}
+function copyText(t){const ok=()=>toast('Copied for AI agent'),fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){toast('Copy failed')}a.remove()};
+ if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(ok,fb);else fb()}
+const gi=t=>{const{d,s,i}=t.dataset;return[d,s,+i]},cur=t=>{const[d,s,i]=gi(t),it=S.schedule[d][s][i];return Math.min(S.done[dk(d,s,it.chapter)]||0,it.questions)};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act;
+ if(a==='closeModal'&&e.target!==t)return;
+ if(a==='add'){const[d,s,i]=gi(t);markCompleted(d,s,i,cur(t)+ +t.dataset.n)}
+ else if(a==='full'){const[d,s,i]=gi(t),q=S.schedule[d][s][i].questions;markCompleted(d,s,i,cur(t)>=q?0:q)}
+ else if(a==='miss')markMissed(t.dataset.d);
+ else if(a==='open'){ui.modal=t.dataset.d;ui.date=t.dataset.d;ui.q='';$('#q').value='';render()}
+ else if(a==='closeModal'||a==='closeModal2'){ui.modal=null;render()}
+ else if(a==='dnav'){const n=ui.date||focusDefault(),x=addD(n,+t.dataset.n);if(inRange(x)){ui.date=x;render()}}
+ else if(a==='jump'){ui.date=null;ui.view='today';ui.q='';$('#q').value='';render();scrollTo(0,0)}
+ else if(a==='copyday')copyText(generateAgentUpdate('day',t.dataset.d));
+ else if(a==='copyscope')copyText(generateAgentUpdate(ui.scope,ui.date||focusDefault()));
+ else if(a==='scope'){ui.scope=t.dataset.v;render()}
+ else if(a==='undo')undo();else if(a==='dismiss'){delete S.notice;save();render()}
+ else if(a==='focus'){S.settings.focus=!S.settings.focus;save();render()}
+ else if(a==='addch')addChapter($('#ns').value,$('#nn').value,$('#nt').value);
+ else if(a==='delch')deleteChapter(t.dataset.s,t.dataset.n);
+ else if(a==='rsched')resetSchedule();else if(a==='rprog')resetProgress();else if(a==='rall')resetEverything()});
+document.addEventListener('change',e=>{const t=e.target.closest('[data-chg]');if(!t)return;const k=t.dataset.chg,v=t.value;
+ if(k==='sched'){const[d,s,i]=gi(t);updateQuestionAmount(d,s,i,v)}
+ else if(k==='done'){const[d,s,i]=gi(t);markCompleted(d,s,i,v)}
+ else if(k==='filt'){ui.f[t.dataset.k]=v;render()}else if(k==='cf'){ui.cf[t.dataset.k]=v;render()}
+ else if(k==='chname')renameChapter(t.dataset.s,t.dataset.n,v);
+ else if(k==='chsub')setChapterSubject(t.dataset.s,t.dataset.n,v);
+ else if(k==='chtotal')setChapterTotal(t.dataset.s,t.dataset.n,v)});
+$('#nav').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;ui.view=b.dataset.v;ui.q='';$('#q').value='';render();scrollTo(0,0)});
+$('#q').addEventListener('input',e=>{ui.q=e.target.value;render()});
+document.addEventListener('keydown',e=>{if(/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)||e.ctrlKey||e.metaKey)return;
+ if(e.key==='t'){ui.date=null;ui.view='today';render()}else if(e.key==='/'){e.preventDefault();$('#q').focus()}else if(e.key==='z')undo();else if(e.key==='Escape'&&ui.modal){ui.modal=null;render()}});
+render();
+</script></body></html>
