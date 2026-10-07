@@ -66,7 +66,7 @@ function addTask(){let title=document.getElementById('taskTitle').value.trim();i
 function toggleTask(id){let x=getDay().find(t=>t.id===id);if(x)x.done=!x.done;savePlanner()}
 function deleteTask(id){planner[plannerDate()]=getDay().filter(t=>t.id!==id);savePlanner()}
 function renderPlanner(){let a=getDay(),done=a.filter(x=>x.done).length,total=a.reduce((n,x)=>n+(x.mins||0),0);document.getElementById('planTotal').textContent=a.length;document.getElementById('planDone').textContent=(a.length?Math.round(done/a.length*100):0)+'%';document.getElementById('planMinutes').textContent=total+'m';let el=document.getElementById('taskList');el.innerHTML=a.length?a.map(x=>`<div class="task ${x.done?'done':''}"><input type="checkbox" ${x.done?'checked':''} onchange="toggleTask(${x.id})"><time>${x.time||'—'}</time><div><div class="task-title">${esc(x.title)}</div><div class="task-meta">${esc(x.cat)} · ${x.mins||0} min</div></div><button class="btn danger" onclick="deleteTask(${x.id})">×</button></div>`).join(''):'<p class="sub">No tasks planned. Add the first one.</p>'}
-const GH_REPO='standard-data', GH_PATH='data/standard-dashboard.json';
+const GH_REPO='jee', GH_PATH='data/standard-dashboard.json';
 function githubCfg(){let c=JSON.parse(localStorage.getItem(GH_KEY)||'{}');return{owner:c.owner||'',repo:GH_REPO,branch:'',path:GH_PATH,token:document.getElementById('ghToken').value.trim()||c.token||''}}
 function saveCfg(c){let x={owner:c.owner};if(document.getElementById('rememberToken').checked)x.token=c.token;localStorage.setItem(GH_KEY,JSON.stringify(x))}
 function loadCfg(){let c=JSON.parse(localStorage.getItem(GH_KEY)||'{}');if(c.token){document.getElementById('ghToken').value=c.token;document.getElementById('rememberToken').checked=true}}
